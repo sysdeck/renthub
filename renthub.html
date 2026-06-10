@@ -682,27 +682,40 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
 </div>
 
 <script>
-/* ═══════════ GOOGLE SHEETS API ═══════════ */
+/* ═══════════ GOOGLE SHEETS API (JSONP — เลี่ยง CORS) ═══════════ */
 const API_URL = 'https://script.google.com/macros/s/AKfycbySpn6tvzlQ97kLysaVnf1Z3n_ELkYgwknCv3MQF_6AwCBmlmt0U3mnB-WA1ypckhQ/exec';
 
-/* GET: ดึงข้อมูลจาก Sheet */
-async function apiGet(params){
-  const qs = new URLSearchParams(params).toString();
-  const res = await fetch(API_URL + '?' + qs);
-  const json = await res.json();
-  if(!json.ok) throw new Error(json.error || 'API error');
-  return json.data;
-}
-/* POST: เขียนข้อมูลกลับ Sheet (text/plain เลี่ยง CORS preflight) */
-async function apiPost(payload){
-  const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload)
+let _jsonpId = 0;
+/* โหลดผ่าน <script> tag → ไม่ติด CORS (Apps Script ห่อ response เป็น callback) */
+function jsonp(params){
+  return new Promise((resolve, reject)=>{
+    const cb = 'rhcb_' + (++_jsonpId) + '_' + Date.now();
+    const timer = setTimeout(()=>{
+      cleanup(); reject(new Error('หมดเวลาเชื่อมต่อ (timeout)'));
+    }, 30000);
+    function cleanup(){
+      clearTimeout(timer);
+      delete window[cb];
+      if(s && s.parentNode) s.parentNode.removeChild(s);
+    }
+    window[cb] = (data)=>{ cleanup(); 
+      if(data && data.ok) resolve(data.data);
+      else reject(new Error((data&&data.error)||'API error'));
+    };
+    const qs = new URLSearchParams({...params, callback:cb}).toString();
+    const s = document.createElement('script');
+    s.src = API_URL + '?' + qs;
+    s.onerror = ()=>{ cleanup(); reject(new Error('โหลดสคริปต์ไม่สำเร็จ')); };
+    document.body.appendChild(s);
   });
-  const json = await res.json();
-  if(!json.ok) throw new Error(json.error || 'API error');
-  return json.data;
+}
+
+/* GET: ดึงข้อมูล */
+async function apiGet(params){ return jsonp(params); }
+
+/* WRITE: เขียนข้อมูล — ส่ง payload ผ่าน GET (JSONP) เลี่ยง CORS preflight */
+async function apiPost(payload){
+  return jsonp({ payload: JSON.stringify(payload) });
 }
 
 /* ═══════════ STATE ═══════════ */
