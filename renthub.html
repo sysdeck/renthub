@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RentHub — ระบบจัดการหอพัก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font:'Prompt',-apple-system,sans-serif;
+  --r-card:14px; --r-btn:50px; --r-input:10px; --sidebar-w:240px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --rent-air:4000; --rent-fan:3500; --mid:100; --elec-rate:7; --water-rate:17;
+}
+[data-theme="dark"]{
+  --bg-base:#0a0d13; --bg-sidebar:#0d1017; --bg-card:#141925; --bg-card2:#1b2130;
+  --bg-input:#1b2130; --bg-thead:#1b2130; --border:#252b3b; --border-soft:#1e2433;
+  --text-primary:#eef1f8; --text-secondary:#8a92a8; --text-muted:#5a6178;
+  --accent:#4f8ef7; --accent-soft:rgba(79,142,247,.12); --accent-glow:rgba(79,142,247,.25);
+  --c-elec:#4f8ef7; --c-water:#4f8ef7; --c-danger:#ff6b6b; --c-success:#3ddc97; --c-warn:#f7b955;
+  --shadow:0 4px 24px rgba(0,0,0,.45); --topbar-blur:rgba(10,13,19,.82);
+  --total-card-bg:linear-gradient(135deg,rgba(79,142,247,.22),rgba(79,142,247,.08));
+  --total-card-bd:#4f8ef7; --total-glow:0 0 30px rgba(79,142,247,.25);
+  --row-hover:rgba(79,142,247,.05);
+  --thead-elec:transparent; --thead-water:transparent; --thead-mid:transparent; --thead-total:transparent;
+  --icon-elec-bg:rgba(79,142,247,.12); --icon-water-bg:rgba(79,142,247,.12); --icon-mid-bg:rgba(255,255,255,.06); --icon-room-bg:rgba(255,255,255,.06);
+  --addbtn-grad:#4f8ef7; --sb-thumb:#252b3b; --num-room:#4f8ef7;
+  --badge-air-bg:rgba(79,142,247,.15); --badge-air-tx:#4f8ef7;
+  --badge-fan-bg:rgba(61,220,151,.15); --badge-fan-tx:#3ddc97;
+  --badge-empty-bg:rgba(90,97,120,.2); --badge-empty-tx:#8a92a8;
+}
+[data-theme="light"]{
+  --bg-base:#f6f7fc; --bg-sidebar:#ffffff; --bg-card:#ffffff; --bg-card2:#f4f6fc;
+  --bg-input:#f4f6fc; --bg-thead:#f9f9ff; --border:#e8eaf5; --border-soft:#eef0f8;
+  --text-primary:#2d3148; --text-secondary:#7a8194; --text-muted:#aab0c0;
+  --accent:#7c6cf0; --accent-soft:rgba(124,108,240,.1); --accent-glow:rgba(124,108,240,.2);
+  --c-elec:#f59e0b; --c-water:#38b2e8; --c-danger:#ef4444; --c-success:#10b981; --c-warn:#f59e0b;
+  --shadow:0 2px 16px rgba(124,108,240,.07); --topbar-blur:rgba(246,247,252,.9);
+  --total-card-bg:#eef0ff; --total-card-bd:#d8d4fa; --total-glow:0 4px 18px rgba(124,108,240,.12);
+  --row-hover:rgba(124,108,240,.03);
+  --thead-elec:#fdf6e8; --thead-water:#eaf6fd; --thead-mid:#f2effd; --thead-total:#eafaf2;
+  --icon-elec-bg:#fdf6e8; --icon-water-bg:#eaf6fd; --icon-mid-bg:#f2effd; --icon-room-bg:#f2effd;
+  --addbtn-grad:linear-gradient(135deg,#8b7cf5,#6c5ce8); --sb-thumb:#d8dbeb; --num-room:#7c6cf0;
+  --badge-air-bg:#eaf6fd; --badge-air-tx:#38b2e8;
+  --badge-fan-bg:#eafaf2; --badge-fan-tx:#10b981;
+  --badge-empty-bg:#f0f1f6; --badge-empty-tx:#9ca3af;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg-base);color:var(--text-primary);font-size:14px;line-height:1.55;transition:background .25s var(--ease),color .25s var(--ease);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:4px}
+
+/* ── APP / SIDEBAR ── */
+.app{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:22px 16px;position:fixed;top:0;left:0;bottom:0;z-index:90;transition:transform .3s var(--ease),background .25s}
+.sidebar-brand{display:flex;align-items:center;gap:11px;padding:0 8px 26px}
+.brand-logo{width:40px;height:40px;background:var(--accent);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 14px var(--accent-glow);flex-shrink:0}
+.brand-text h2{font-size:16px;font-weight:700;letter-spacing:.02em;line-height:1.1}
+.brand-text span{font-size:9.5px;font-weight:400;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase}
+.nav-menu{list-style:none;display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;color:var(--text-secondary);cursor:pointer;font-size:14px;font-weight:500;transition:all .18s var(--ease);user-select:none}
+.nav-item:active{transform:scale(.97)}
+.nav-item:hover{background:var(--bg-card2);color:var(--text-primary)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav-item .nav-ic{font-size:18px;width:20px;text-align:center}
+.sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:11px;background:var(--bg-card2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:border-color .18s}
+.user-chip:hover{border-color:var(--accent)}
+.user-avatar{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-info b{font-size:12.5px;font-weight:600;display:block}
+.user-info span{font-size:10.5px;color:var(--text-muted)}
+.user-chip .chevron{color:var(--text-muted);font-size:11px}
+.info-box{padding:12px 13px;background:var(--bg-card2);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:space-between}
+.info-box .ib-label{font-size:10.5px;color:var(--text-muted)}
+.info-box .ib-value{font-size:13px;font-weight:600;margin-top:1px}
+.info-box .ib-icon{font-size:16px;color:var(--text-secondary)}
+
+/* ── CONTENT ── */
+.content{flex:1;margin-left:var(--sidebar-w);min-width:0;display:flex;flex-direction:column}
+.mobile-topbar{display:none;position:sticky;top:0;z-index:80;background:var(--topbar-blur);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;height:56px;align-items:center;justify-content:space-between;gap:10px}
+.hamburger{background:none;border:none;color:var(--text-primary);font-size:22px;cursor:pointer;padding:4px}
+.mobile-title{font-size:15px;font-weight:600;flex:1;text-align:center}
+.page-body{padding:26px 28px 50px}
+
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.page-title h1{font-size:23px;font-weight:700;letter-spacing:.01em}
+.page-title p{font-size:13px;color:var(--text-secondary);margin-top:3px}
+.header-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:var(--r-btn);padding:10px 18px;font-family:var(--font);font-size:13.5px;font-weight:500;cursor:pointer;transition:all .18s var(--ease);white-space:nowrap}
+.btn:active{transform:scale(.95)}
+.btn-add{background:var(--addbtn-grad);color:#fff;font-weight:600;box-shadow:0 3px 12px var(--accent-glow)}
+.btn-add:hover{box-shadow:0 5px 18px var(--accent-glow);filter:brightness(1.05)}
+.btn-ghost{background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:8px 15px;font-size:12.5px}
+.btn-danger{background:var(--c-danger);color:#fff}
+.date-pill{display:inline-flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:9px 15px;font-size:13.5px;color:var(--text-primary);cursor:pointer;font-family:var(--font);transition:border-color .18s}
+.date-pill:hover{border-color:var(--accent)}
+.date-pill select{border:none;background:transparent;color:var(--text-primary);font-family:var(--font);font-size:13.5px;cursor:pointer;outline:none}
+.date-pill .chev{color:var(--text-muted);font-size:11px}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-card);padding:20px 22px;position:relative;min-height:118px;display:flex;flex-direction:column;transition:transform .2s var(--ease)}
+.stat-card:hover{transform:translateY(-3px)}
+.stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;position:absolute;top:20px;left:22px}
+.stat-body{margin-left:60px}
+.stat-label{font-size:13px;color:var(--text-secondary);margin-bottom:7px}
+.stat-number{font-size:28px;font-weight:700;line-height:1}
+.stat-unit{font-size:12px;color:var(--text-muted);font-weight:400;margin-left:3px}
+.stat-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+.stat-rooms .stat-icon{background:var(--icon-room-bg);color:var(--accent)}
+.stat-elec .stat-icon{background:var(--icon-elec-bg);color:var(--c-elec)}
+.stat-water .stat-icon{background:var(--icon-water-bg);color:var(--c-water)}
+.stat-mid .stat-icon{background:var(--icon-mid-bg);color:var(--text-secondary)}
+.stat-total{background:var(--total-card-bg);border-color:var(--total-card-bd);box-shadow:var(--total-glow)}
+.stat-total .stat-icon{background:var(--accent-soft);color:var(--accent)}
+.stat-total .stat-number{color:var(--accent)}
+
+/* ── TABLE ── */
+.table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow)}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:920px}
+thead th{padding:13px 12px;font-weight:600;color:var(--text-secondary);font-size:12.5px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg-thead);white-space:nowrap;position:relative}
+thead tr.group-row th{padding:12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border-soft)}
+.gh-elec{background:var(--thead-elec)!important;color:var(--c-elec)!important}
+.gh-water{background:var(--thead-water)!important;color:var(--c-water)!important}
+.gh-mid{background:var(--thead-mid)!important;color:var(--text-secondary)!important}
+.gh-total{background:var(--thead-total)!important;color:var(--c-success)!important}
+.sub-elec{background:var(--thead-elec)!important}.sub-water{background:var(--thead-water)!important}
+.th-room,.th-name{text-align:left!important}
+.th-total-sub{font-weight:400;font-size:10.5px;color:var(--text-muted)}
+.th-sortable{cursor:pointer;user-select:none}
+.th-sortable:hover{color:var(--accent)}
+.sort-ind{font-size:9px;margin-left:3px;opacity:.6}
+.th-search{margin-top:6px}
+.th-search input{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-family:var(--font);font-size:11px;color:var(--text-primary);outline:none}
+.th-search input:focus{border-color:var(--accent)}
+tbody tr{border-bottom:1px solid var(--border-soft);transition:background .14s}
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover{background:var(--row-hover)}
+tbody td{padding:14px 12px;text-align:center;vertical-align:middle}
+.cell-room{text-align:left;font-weight:700;font-size:15px;color:var(--num-room)}
+.cell-name{text-align:left;font-weight:400;color:var(--text-primary)}
+.cell-meter{color:var(--text-secondary);font-size:12.5px;font-variant-numeric:tabular-nums}
+.cell-unit{font-weight:600;font-variant-numeric:tabular-nums}
+.cell-money{font-weight:400;font-variant-numeric:tabular-nums}
+.cell-mid{color:var(--text-secondary)}
+.cell-total{font-weight:700;font-size:15px;color:var(--accent);white-space:nowrap}
+.cell-total .baht{font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px}
+.cell-kebab{color:var(--text-muted);font-size:16px;width:36px}
+.cell-arrow{color:var(--text-muted);font-size:14px;width:30px}
+tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top:2px solid var(--border);text-align:center;font-variant-numeric:tabular-nums}
+.foot-label{font-size:14px}
+.foot-total{color:var(--accent);font-size:16px}
+.foot-total .baht{font-size:11px;font-weight:400;color:var(--text-muted)}
+
+/* inline editable cells (bill page) */
+.cell-input{width:72px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:8px;padding:7px 6px;font-family:var(--font);font-size:13px;color:var(--text-primary);text-align:center;outline:none;transition:border-color .15s;font-variant-numeric:tabular-nums}
+.cell-input:focus{border-color:var(--accent);background:var(--bg-card)}
+.cell-input.locked{background:transparent;border-color:transparent;color:var(--text-secondary);pointer-events:none}
+.cell-name-input{width:100%;min-width:90px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:8px;padding:7px 9px;font-family:var(--font);font-size:13px;color:var(--text-primary);outline:none;transition:border-color .15s}
+.cell-name-input:focus{border-color:var(--accent)}
+
+.table-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;gap:12px;flex-wrap:wrap}
+.perpage{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary)}
+.perpage select{background:var(--bg-card2);border:1px solid var(--border);color:var(--text-primary);font-family:var(--font);font-size:12.5px;border-radius:8px;padding:5px 9px;cursor:pointer;outline:none}
+.pager{display:flex;gap:5px}
+.page-btn{min-width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .15s;padding:0 8px}
+.page-btn:hover:not(:disabled),.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle{display:flex;background:var(--bg-card2);border:1px solid var(--border);border-radius:40px;padding:3px;gap:2px}
+.tt-btn{border:none;background:transparent;color:var(--text-muted);border-radius:30px;padding:6px 13px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tt-btn.active{background:var(--accent);color:#fff}
+.tt-btn:not(.active):hover{color:var(--text-primary)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 11px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.badge-air{background:var(--badge-air-bg);color:var(--badge-air-tx)}
+.badge-fan{background:var(--badge-fan-bg);color:var(--badge-fan-tx)}
+.badge-empty{background:var(--badge-empty-bg);color:var(--badge-empty-tx)}
+
+/* ── MODALS ── */
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center}
+.overlay.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(min-width:600px){.overlay{align-items:center;padding:24px}.sheet{border-radius:var(--r-card)!important}}
+.sheet{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-card) var(--r-card) 0 0;width:100%;max-width:440px;max-height:92vh;overflow-y:auto;padding:28px 24px 32px;animation:slideUp .26s var(--ease);position:relative}
+.sheet.wide{max-width:500px}
+@keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet-close{position:absolute;top:16px;right:16px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--bg-card2);border:1px solid var(--border);border-radius:50%;cursor:pointer;font-size:15px;color:var(--text-secondary);transition:all .15s;z-index:2}
+.sheet-close:hover{color:var(--text-primary);border-color:var(--accent)}
+.sheet-title{font-size:18px;font-weight:700;margin-bottom:18px}
+
+/* detail modal */
+.detail-roomnum{font-size:54px;font-weight:700;color:var(--accent);line-height:1;text-align:center}
+.detail-tenant{font-size:17px;font-weight:500;text-align:center;margin:4px 0 22px;color:var(--text-secondary)}
+.detail-block{background:var(--bg-card2);border:1px solid var(--border);border-radius:12px;padding:15px 16px;margin-bottom:12px}
+.detail-block-title{font-size:13.5px;font-weight:600;margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.detail-block-title.elec{color:var(--c-elec)}.detail-block-title.water{color:var(--c-water)}
+.detail-grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.di label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px}
+.di b{font-size:19px;font-weight:600;display:block}
+.di b.small{font-size:15px}.di b.hl-elec{color:var(--c-elec)}.di b.hl-water{color:var(--c-water)}
+.detail-line{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-bottom:1px solid var(--border);font-size:14px}
+.detail-line .lbl{color:var(--text-secondary)}.detail-line .v{font-weight:600}
+.detail-grand{display:flex;justify-content:space-between;align-items:center;padding-top:16px;margin-top:4px;border-top:2px solid var(--border)}
+.detail-grand .lbl{font-size:15px;font-weight:600}.detail-grand .v{font-size:25px;font-weight:700;color:var(--accent)}
+.detail-actions{display:flex;gap:10px;margin-top:20px}
+
+/* form */
+.fg{margin-bottom:14px}
+.fg-label{display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px}
+.fg-input{width:100%;background:var(--bg-input);border:1.5px solid var(--border);color:var(--text-primary);font-family:var(--font);font-size:14px;border-radius:var(--r-input);padding:11px 13px;outline:none;transition:border-color .18s}
+.fg-input:focus{border-color:var(--accent)}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg-divider{display:flex;align-items:center;gap:10px;margin:8px 0 14px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em}
+.fg-divider::before,.fg-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.fg-hint{font-size:11px;color:var(--c-warn);margin-top:5px;line-height:1.5}
+.calc-box{background:var(--bg-card2);border:1px solid var(--border);border-radius:11px;padding:15px;margin-bottom:17px}
+.calc-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px;border-bottom:1px solid var(--border-soft)}
+.calc-line:last-child{border:none;font-weight:700;font-size:15px;padding-top:11px;margin-top:4px;border-top:2px solid var(--border)}
+.calc-line .cr{font-weight:600;font-variant-numeric:tabular-nums}
+.calc-line:last-child .cr{color:var(--accent);font-size:19px}
+
+/* segmented control */
+.seg{display:flex;gap:0;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--r-input);padding:3px;overflow:hidden}
+.seg-btn{flex:1;border:none;background:transparent;color:var(--text-secondary);padding:9px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border-radius:7px;transition:all .15s}
+.seg-btn.active{background:var(--accent);color:#fff;font-weight:600}
+
+/* ── EXPORT MODAL ── */
+.export-opt{display:flex;align-items:center;gap:13px;padding:15px;background:var(--bg-card2);border:1.5px solid var(--border);border-radius:12px;margin-bottom:11px;cursor:pointer;transition:all .15s}
+.export-opt:hover{border-color:var(--accent)}
+.export-opt.selected{border-color:var(--accent);background:var(--accent-soft)}
+.export-opt .eo-icon{font-size:24px;width:30px;text-align:center}
+.export-opt .eo-text b{font-size:14px;font-weight:600;display:block}
+.export-opt .eo-text span{font-size:11.5px;color:var(--text-secondary)}
+
+/* ── PAY PAGE ── */
+.pay-wrap{max-width:440px;margin:0 auto}
+.pay-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow);margin-bottom:18px}
+.pay-row{display:flex;align-items:center;gap:14px;padding:18px 20px;border-bottom:1px solid var(--border-soft)}
+.pay-row:last-child{border:none}
+.pay-icon{width:44px;height:44px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.pay-info{flex:1;min-width:0}
+.pay-info label{font-size:11.5px;color:var(--text-muted);display:block}
+.pay-info b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.pay-copy{background:var(--bg-card2);border:1px solid var(--border);border-radius:9px;padding:7px 13px;font-size:12px;color:var(--accent);cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.pay-copy:hover{background:var(--accent);color:#fff}
+.qr-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-card);padding:26px;text-align:center;box-shadow:var(--shadow)}
+.qr-card h3{font-size:15px;font-weight:600;margin-bottom:18px}
+.qr-box{width:220px;height:220px;margin:0 auto 16px;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:14px}
+.qr-box img{width:100%;height:100%}
+.qr-note{font-size:12px;color:var(--text-secondary);line-height:1.6}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-btn);padding:11px 19px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow);pointer-events:auto;animation:toastIn .2s var(--ease),toastOut .3s var(--ease) 2.7s forwards}
+.toast.success{border-color:var(--c-success);color:var(--c-success)}
+.toast.error{border-color:var(--c-danger);color:var(--c-danger)}
+.toast.info{border-color:var(--accent);color:var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-8px)}}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:50px 20px;color:var(--text-muted)}
+.empty .ic{font-size:42px;margin-bottom:12px}
+.empty p{font-size:14px;line-height:1.7}
+
+/* ── PAGE SWITCHING ── */
+.page{display:none}
+.page.active{display:block;animation:pageIn .25s var(--ease)}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SECTION TITLE ── */
+.section-title{font-size:14px;font-weight:600;color:var(--text-secondary);margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.note-box{background:var(--bg-card2);border:1px solid var(--border);border-radius:11px;padding:13px 15px;font-size:12px;color:var(--text-secondary);line-height:1.7;margin-top:14px}
+.note-box b{color:var(--text-primary)}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.gs-status{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-secondary);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-btn);padding:8px 14px}
+.gs-dot{width:7px;height:7px;border-radius:50%;background:var(--c-warn)}
+
+.demo-banner{background:linear-gradient(90deg,var(--accent-soft),transparent);border:1px solid var(--total-card-bd);border-radius:11px;padding:11px 15px;font-size:12.5px;color:var(--text-secondary);margin-bottom:20px;display:flex;align-items:center;gap:9px}
+.demo-banner b{color:var(--accent)}
+
+/* ── MOBILE NAV ── */
+.mnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:95;background:var(--topbar-blur);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom))}
+.mnav ul{display:flex;list-style:none;justify-content:space-around}
+.mnav li{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:10px;transition:color .15s}
+.mnav li.active{color:var(--accent)}
+.mnav li .mn-ic{font-size:19px}
+.sidebar-backdrop{display:none;position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.5)}
+.sidebar-backdrop.show{display:block}
+
+@media(max-width:1024px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.4)}
+  .content{margin-left:0}.mobile-topbar{display:flex}.mnav{display:block}
+  .page-body{padding:18px 16px 90px}.page-header{margin-bottom:18px}
+  .page-title h1{font-size:19px}.desktop-only{display:none!important}
+  .header-actions{width:100%}.header-actions .btn-add{flex:1;justify-content:center}
+}
+@media(max-width:480px){
+  .stats-grid{gap:10px}.stat-card{padding:14px 13px;min-height:auto}
+  .stat-icon{width:36px;height:36px;font-size:17px;top:13px;left:13px}
+  .stat-body{margin-left:46px}.stat-number{font-size:21px}.stat-label{font-size:12px;margin-bottom:4px}
+}
+@media print{.sidebar,.mobile-topbar,.header-actions,.toolbar,.table-footer,.mnav,.demo-banner{display:none!important}.content{margin-left:0}.page-body{padding:0}body{background:#fff;color:#000}}
+
+/* ── INLINE SVG ICONS ── */
+.svgic{width:1em;height:1em;fill:currentColor;display:inline-block;vertical-align:-0.125em;flex-shrink:0}
+.nav-ic .svgic{width:18px;height:18px}
+.stat-icon .svgic{width:23px;height:23px}
+.brand-logo .svgic{width:21px;height:21px;fill:#fff}
+.btn .svgic,.date-pill .svgic,.pay-copy .svgic{width:15px;height:15px}
+.mn-ic .svgic{width:20px;height:20px}
+.detail-block-title .svgic{width:16px;height:16px}
+.pay-icon .svgic{width:21px;height:21px}
+.seg-btn .svgic{width:14px;height:14px;margin-right:3px}
+.ib-icon .svgic{width:16px;height:16px}
+.chevron .svgic,.chev .svgic{width:11px;height:11px}
+.cell-arrow .svgic{width:14px;height:14px}
+.demo-banner .svgic{width:16px;height:16px;fill:var(--accent)}
+.note-box .svgic{width:14px;height:14px}
+.badge .svgic{width:12px;height:12px}
+.qr-card h3 .svgic{width:16px;height:16px}
+.section-title .svgic{width:15px;height:15px}
+.empty .ic .svgic{width:42px;height:42px}
+.toast .svgic{width:15px;height:15px;vertical-align:-0.18em}
+.hamburger .svgic{width:21px;height:21px}
+.eo-icon .svgic{width:24px;height:24px}
+
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="sidebar-backdrop" id="sbBackdrop" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22,5.724V2c0-.552-.447-1-1-1s-1,.448-1,1v2.366L14.797,.855c-1.699-1.146-3.895-1.146-5.594,0L2.203,5.579c-1.379,.931-2.203,2.48-2.203,4.145v9.276c0,2.757,2.243,5,5,5h3c.553,0,1-.448,1-1V15c0-.551,.448-1,1-1h4c.552,0,1,.449,1,1v8c0,.552,.447,1,1,1h3c2.757,0,5-2.243,5-5V9.724c0-1.581-.744-3.058-2-4Zm0,13.276c0,1.654-1.346,3-3,3h-2v-7c0-1.654-1.346-3-3-3h-4c-1.654,0-3,1.346-3,3v7h-2c-1.654,0-3-1.346-3-3V9.724c0-.999,.494-1.929,1.322-2.487L10.322,2.513c1.02-.688,2.336-.688,3.355,0l7,4.724c.828,.558,1.322,1.488,1.322,2.487v9.276Z"/></svg></div>
+      <div class="brand-text"><h2>RENTHUB</h2><span>Management</span></div>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item active" data-page="home" onclick="goPage('home')"><span class="nav-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22,5.724V2c0-.552-.447-1-1-1s-1,.448-1,1v2.366L14.797,.855c-1.699-1.146-3.895-1.146-5.594,0L2.203,5.579c-1.379,.931-2.203,2.48-2.203,4.145v9.276c0,2.757,2.243,5,5,5h3c.553,0,1-.448,1-1V15c0-.551,.448-1,1-1h4c.552,0,1,.449,1,1v8c0,.552,.447,1,1,1h3c2.757,0,5-2.243,5-5V9.724c0-1.581-.744-3.058-2-4Zm0,13.276c0,1.654-1.346,3-3,3h-2v-7c0-1.654-1.346-3-3-3h-4c-1.654,0-3,1.346-3,3v7h-2c-1.654,0-3-1.346-3-3V9.724c0-.999,.494-1.929,1.322-2.487L10.322,2.513c1.02-.688,2.336-.688,3.355,0l7,4.724c.828,.558,1.322,1.488,1.322,2.487v9.276Z"/></svg></span> หน้าหลัก</li>
+      <li class="nav-item" data-page="rooms" onclick="goPage('rooms')"><span class="nav-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m7.006,24c-1.858,0-3.633-.727-4.956-2.05C.554,20.454-.18,18.38.038,16.261c.289-2.817,2.325-5.228,5.066-5.997,1.302-.365,2.61-.354,3.893.032L18.561.732c.473-.472,1.1-.732,1.768-.732h2.172c.827,0,1.5.673,1.5,1.5v2.171c0,.668-.26,1.296-.732,1.768l-1.561,1.561h-2.707v3h-3v2.707l-2.296,2.296c.386,1.283.396,2.591.031,3.893-.769,2.741-3.178,4.777-5.997,5.067-.244.025-.489.038-.732.038Zm-.004-13.001c-.542,0-1.085.076-1.628.228-2.349.659-4.094,2.724-4.342,5.137-.187,1.818.442,3.596,1.725,4.879,1.283,1.283,3.06,1.912,4.88,1.725,2.413-.248,4.478-1.993,5.136-4.342.338-1.204.301-2.413-.111-3.596l-.103-.296,2.441-2.441v-3.293h3v-3h3.293l1.268-1.268c.283-.283.439-.66.439-1.061V1.5c0-.276-.225-.5-.5-.5h-2.172c-.395,0-.781.16-1.061.439l-10.002,10.001-.296-.103c-.649-.226-1.307-.339-1.968-.339Zm-2.002,7.001c0,.552.448,1,1,1s1-.448,1-1-.448-1-1-1-1,.448-1,1Z"/></svg></span> ห้องพัก</li>
+      <li class="nav-item" data-page="bill" onclick="goPage('bill')"><span class="nav-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5,15c0-1.103,.897-2,2-2h6.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-.551,0-1,.449-1,1v2c0,.551,.449,1,1,1h7.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-1.103,0-2-.897-2-2v-2Zm.5-5h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm0-4h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm11.5,17.5c0,.276-.224,.5-.5,.5H5.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C1,2.019,3.019,0,5.5,0h5.515c1.735,0,3.368,.676,4.597,1.904l3.484,3.485c.824,.824,1.413,1.857,1.702,2.987,.038,.15,.005,.309-.09,.431s-.24,.193-.395,.193h-5.813c-1.379,0-2.5-1.122-2.5-2.5V1.087c-.322-.058-.651-.087-.985-.087H5.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h11c.276,0,.5,.224,.5,.5ZM13,6.5c0,.827,.673,1.5,1.5,1.5h5.129c-.275-.712-.697-1.361-1.24-1.904l-3.484-3.485c-.552-.551-1.199-.97-1.904-1.243V6.5Zm8.79,10.281l-3.422-.55c-.793-.127-1.368-.803-1.368-1.605,0-.896,.729-1.626,1.626-1.626h2.8c.623,0,1.204,.335,1.517,.875,.139,.24,.445,.32,.683,.183,.239-.138,.321-.444,.183-.683-.49-.848-1.402-1.375-2.382-1.375h-.926v-1.5c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v1.5h-.874c-1.448,0-2.626,1.178-2.626,2.626,0,1.296,.93,2.387,2.21,2.593l3.422,.55c.793,.127,1.368,.803,1.368,1.605,0,.896-.729,1.626-1.626,1.626h-2.8c-.623,0-1.204-.335-1.517-.875-.139-.24-.448-.321-.683-.183-.239,.138-.321,.444-.183,.683,.49,.848,1.402,1.375,2.382,1.375h.926v1.5c0,.276,.224,.5,.5,.5s.5-.224,.5-.5v-1.5h.874c1.448,0,2.626-1.178,2.626-2.626,0-1.296-.93-2.387-2.21-2.593Z"/></svg></span> บิลรายเดือน</li>
+      <li class="nav-item" data-page="pay" onclick="goPage('pay')"><span class="nav-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m19.475,1.025H4.475C1.993,1.025-.025,3.044-.025,5.525v9c0,2.481,2.019,4.5,4.5,4.5h7c.276,0,.5-.224.5-.5s-.224-.5-.5-.5h-7c-1.93,0-3.5-1.57-3.5-3.5v-5.5h22v2.5c0,.276.224.5.5.5s.5-.224.5-.5v-6c0-2.481-2.019-4.5-4.5-4.5Zm-15,1h15c1.758,0,3.204,1.308,3.449,3H1.025c.245-1.692,1.691-3,3.449-3ZM.975,8.025v-2h22v2H.975Zm1.942,6c0,1.103.897,2,2,2s2-.897,2-2-.897-2-2-2-2,.897-2,2Zm3,0c0,.552-.449,1-1,1s-1-.448-1-1,.449-1,1-1,1,.448,1,1Zm16.058,6c-1.103,0-2,.897-2,2s.897,2,2,2,2-.897,2-2-.897-2-2-2Zm0,3c-.551,0-1-.448-1-1s.449-1,1-1,1,.448,1,1-.449,1-1,1Zm-4-7c0-1.103-.897-2-2-2s-2,.897-2,2,.897,2,2,2,2-.897,2-2Zm-2,1c-.551,0-1-.448-1-1s.449-1,1-1,1,.448,1,1-.449,1-1,1Zm5.937-2.257l-5,9c-.091.164-.262.257-.438.257-.082,0-.166-.021-.242-.062-.242-.135-.329-.438-.194-.681l5-9c.134-.241.438-.326.68-.194.242.135.329.438.194.681Z"/></svg></span> รับชำระ</li>
+      <li class="nav-item" data-page="settings" onclick="goPage('settings')"><span class="nav-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21,12c0-.622-.071-1.26-.211-1.899l2.998-1.85-3.151-5.106-2.998,1.851c-.801-.647-1.685-1.145-2.638-1.481V0h-6V3.514c-.953,.337-1.837,.834-2.638,1.481l-2.998-1.851L.213,8.251l2.998,1.85c-.14,.64-.211,1.277-.211,1.899s.071,1.26,.211,1.899L.213,15.749l3.151,5.106,2.998-1.851c.801,.647,1.685,1.145,2.638,1.481v3.514h6v-3.514c.953-.337,1.837-.834,2.638-1.481l2.998,1.851,3.151-5.106-2.998-1.85c.14-.64,.211-1.277,.211-1.899Zm1.411,4.075l-2.101,3.403-2.769-1.708c-.968,.911-2.139,1.583-3.541,1.985v3.244h-4v-3.244c-1.278-.331-2.461-.983-3.541-1.985l-2.769,1.708-2.101-3.403,2.769-1.709s-.358-.93-.358-2.366,.358-2.366,.358-2.366l-2.769-1.709,2.101-3.403,2.769,1.708c.977-.884,2.15-1.553,3.541-1.985V1h4v3.244c1.276,.324,2.454,.993,3.541,1.985l2.769-1.708,2.101,3.403-2.769,1.709s.358,.956,.358,2.366-.358,2.366-.358,2.366l2.769,1.709ZM12,8c-2.206,0-4,1.794-4,4s1.794,4,4,4,4-1.794,4-4-1.794-4-4-4Zm0,7c-1.654,0-3-1.346-3-3s1.346-3,3-3,3,1.346,3,3-1.346,3-3,3Z"/></svg></span> ตั้งค่า</li>
+    </ul>
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar">R</div>
+        <div class="user-info"><b>Residence Admin</b><span>เจ้าของหอพัก</span></div>
+        <span class="chevron"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,15.5c-.26,0-.51-.1-.71-.29L5.29,9.21c-.39-.39-.39-1.02,0-1.41s1.02-.39,1.41,0l5.29,5.29,5.29-5.29c.39-.39,1.02-.39,1.41,0s.39,1.02,0,1.41l-5.99,5.99c-.2,.2-.45,.29-.71,.29Z"/></svg></span>
+      </div>
+      <div class="info-box">
+        <div><div class="ib-label">เดือนปัจจุบัน</div><div class="ib-value" id="sbMonth">—</div></div>
+        <span class="ib-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.925 4.418c-.047-.166-.176-.295-.341-.343-.074-.022-.989-.281-2.584-.54v-2.035c0-.276-.224-.5-.5-.5s-.5.224-.5.5v1.889c-1.565-.211-3.591-.389-6-.389s-4.435.178-6 .389v-1.889c0-.276-.224-.5-.5-.5s-.5.224-.5.5v2.036c-1.595.259-2.51.518-2.584.54-.165.048-.294.177-.341.343-.044.153-1.075 3.816-1.075 8.582s1.031 8.428 1.075 8.582c.047.166.176.295.341.343.151.044 3.774 1.076 9.584 1.076s9.433-1.032 9.584-1.076c.165-.048.294-.177.341-.343.044-.153 1.075-3.816 1.075-8.582s-1.031-8.428-1.075-8.582zm-18.96.547c.938-.234 4.259-.965 9.035-.965s8.097.731 9.035.965c.121.479.372 1.569.588 3.039-1.247-.301-4.686-1.004-9.623-1.004s-8.376.703-9.623 1.004c.216-1.47.468-2.56.588-3.039zm18.07 16.07c-.938.234-4.259.965-9.035.965s-8.097-.731-9.035-.965c-.234-.93-.965-4.139-.965-8.035 0-1.429.099-2.762.235-3.928.603-.161 4.27-1.072 9.765-1.072s9.162.911 9.765 1.072c.136 1.166.235 2.499.235 3.928 0 3.896-.73 7.104-.965 8.035zm-12.628-9.823c-.039-.009-.975-.212-1.907-.212s-1.868.203-1.907.212c-.19.042-.339.19-.381.381-.009.04-.212.975-.212 1.907s.203 1.868.212 1.907c.042.19.19.339.381.381.039.009.975.212 1.907.212s1.868-.203 1.907-.212c.19-.042.339-.19.381-.381.009-.04.212-.975.212-1.907s-.203-1.868-.212-1.907c-.042-.19-.19-.339-.381-.381zm-.535 3.66c-.654.11-2.09.11-2.744 0-.055-.327-.128-.857-.128-1.372s.073-1.044.128-1.372c.654-.11 2.09-.11 2.744 0 .055.327.128.857.128 1.372s-.073 1.044-.128 1.372z"/></svg></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="mobile-topbar">
+      <button class="hamburger" onclick="toggleSidebar()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M0,11.5H24v1H0v-1ZM0,4v1H24v-1H0ZM0,20H24v-1H0v1Z"/></svg></button>
+      <span class="mobile-title" id="mTitle">หน้าหลัก</span>
+      <div class="theme-toggle">
+        <button class="tt-btn active" id="ttDarkM" onclick="setTheme('dark')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.692,12.514c-.203-.086-.436-.027-.576,.14-1.086,1.298-2.877,1.902-5.637,1.902-4.998,0-7.037-2.038-7.037-7.033,0-2.694,.621-4.538,1.899-5.638,.165-.142,.219-.374,.134-.575-.086-.2-.293-.313-.507-.302C5.285,1.548,1,6.263,1,11.976c0,6.075,4.945,11.019,11.023,11.019,5.721,0,10.439-4.287,10.975-9.973,.021-.218-.104-.424-.306-.508Zm-10.669,9.48c-5.527,0-10.023-4.494-10.023-10.019C2,7.241,5.236,3.261,9.721,2.222c-.858,1.28-1.278,3.03-1.278,5.301,0,7.12,4.295,8.033,8.037,8.033,2.314,0,4.038-.406,5.301-1.263-1.046,4.475-5.024,7.701-9.757,7.701Z"/></svg></button>
+        <button class="tt-btn" id="ttLightM" onclick="setTheme('light')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,17c-2.76,0-5-2.24-5-5s2.24-5,5-5,5,2.24,5,5-2.24,5-5,5Zm0-9c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm.5-3.5V.5c0-.28-.22-.5-.5-.5s-.5,.22-.5,.5V4.5c0,.28,.22,.5,.5,.5s.5-.22,.5-.5Zm0,19v-4c0-.28-.22-.5-.5-.5s-.5,.22-.5,.5v4c0,.28,.22,.5,.5,.5s.5-.22,.5-.5ZM5,12c0-.28-.22-.5-.5-.5H.5c-.28,0-.5,.22-.5,.5s.22,.5,.5,.5H4.5c.28,0,.5-.22,.5-.5Zm19,0c0-.28-.22-.5-.5-.5h-4c-.28,0-.5,.22-.5,.5s.22,.5,.5,.5h4c.28,0,.5-.22,.5-.5Zm-6.15-5.15l3-3c.2-.2,.2-.51,0-.71s-.51-.2-.71,0l-3,3c-.2,.2-.2,.51,0,.71,.1,.1,.23,.15,.35,.15s.26-.05,.35-.15ZM3.85,20.85l3-3c.2-.2,.2-.51,0-.71s-.51-.2-.71,0l-3,3c-.2,.2-.2,.51,0,.71,.1,.1,.23,.15,.35,.15s.26-.05,.35-.15ZM6.85,6.85c.2-.2,.2-.51,0-.71L3.85,3.15c-.2-.2-.51-.2-.71,0s-.2,.51,0,.71l3,3c.1,.1,.23,.15,.35,.15s.26-.05,.35-.15Zm14,14c.2-.2,.2-.51,0-.71l-3-3c-.2-.2-.51-.2-.71,0s-.2,.51,0,.71l3,3c.1,.1,.23,.15,.35,.15s.26-.05,.35-.15Z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="demo-banner" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:9px">
+          <span class="gs-dot" id="gsDot"></span>
+          <span id="gsText">กำลังเชื่อมต่อ Google Sheets...</span>
+        </span>
+        <button class="btn btn-ghost btn-sm" onclick="refreshData()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Z"/></svg> รีเฟรช</button>
+      </div>
+
+      <!-- ═══════ PAGE: HOME ═══════ -->
+      <section class="page active" id="page-home">
+        <div class="page-header">
+          <div class="page-title">
+            <h1>สรุปค่าน้ำ-ค่าไฟ และค่าเช่าห้อง</h1>
+            <p id="homeSubtitle">ประจำงวด: —</p>
+          </div>
+          <div class="header-actions">
+            <div class="theme-toggle desktop-only" style="margin-right:2px">
+              <button class="tt-btn active" id="ttDark" onclick="setTheme('dark')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.692,12.514c-.203-.086-.436-.027-.576,.14-1.086,1.298-2.877,1.902-5.637,1.902-4.998,0-7.037-2.038-7.037-7.033,0-2.694,.621-4.538,1.899-5.638,.165-.142,.219-.374,.134-.575-.086-.2-.293-.313-.507-.302C5.285,1.548,1,6.263,1,11.976c0,6.075,4.945,11.019,11.023,11.019,5.721,0,10.439-4.287,10.975-9.973,.021-.218-.104-.424-.306-.508Zm-10.669,9.48c-5.527,0-10.023-4.494-10.023-10.019C2,7.241,5.236,3.261,9.721,2.222c-.858,1.28-1.278,3.03-1.278,5.301,0,7.12,4.295,8.033,8.037,8.033,2.314,0,4.038-.406,5.301-1.263-1.046,4.475-5.024,7.701-9.757,7.701Z"/></svg> มืด</button>
+              <button class="tt-btn" id="ttLight" onclick="setTheme('light')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,17c-2.76,0-5-2.24-5-5s2.24-5,5-5,5,2.24,5,5-2.24,5-5,5Zm0-9c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm.5-3.5V.5c0-.28-.22-.5-.5-.5s-.5,.22-.5,.5V4.5c0,.28,.22,.5,.5,.5s.5-.22,.5-.5Zm0,19v-4c0-.28-.22-.5-.5-.5s-.5,.22-.5,.5v4c0,.28,.22,.5,.5,.5s.5-.22,.5-.5ZM5,12c0-.28-.22-.5-.5-.5H.5c-.28,0-.5,.22-.5,.5s.22,.5,.5,.5H4.5c.28,0,.5-.22,.5-.5Zm19,0c0-.28-.22-.5-.5-.5h-4c-.28,0-.5,.22-.5,.5s.22,.5,.5,.5h4c.28,0,.5-.22,.5-.5Zm-6.15-5.15l3-3c.2-.2,.2-.51,0-.71s-.51-.2-.71,0l-3,3c-.2,.2-.2,.51,0,.71,.1,.1,.23,.15,.35,.15s.26-.05,.35-.15ZM3.85,20.85l3-3c.2-.2,.2-.51,0-.71s-.51-.2-.71,0l-3,3c-.2,.2-.2,.51,0,.71,.1,.1,.23,.15,.35,.15s.26-.05,.35-.15ZM6.85,6.85c.2-.2,.2-.51,0-.71L3.85,3.15c-.2-.2-.51-.2-.71,0s-.2,.51,0,.71l3,3c.1,.1,.23,.15,.35,.15s.26-.05,.35-.15Zm14,14c.2-.2,.2-.51,0-.71l-3-3c-.2-.2-.51-.2-.71,0s-.2,.51,0,.71l3,3c.1,.1,.23,.15,.35,.15s.26-.05,.35-.15Z"/></svg> สว่าง</button>
+            </div>
+            <div class="date-pill"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.925 4.418c-.047-.166-.176-.295-.341-.343-.074-.022-.989-.281-2.584-.54v-2.035c0-.276-.224-.5-.5-.5s-.5.224-.5.5v1.889c-1.565-.211-3.591-.389-6-.389s-4.435.178-6 .389v-1.889c0-.276-.224-.5-.5-.5s-.5.224-.5.5v2.036c-1.595.259-2.51.518-2.584.54-.165.048-.294.177-.341.343-.044.153-1.075 3.816-1.075 8.582s1.031 8.428 1.075 8.582c.047.166.176.295.341.343.151.044 3.774 1.076 9.584 1.076s9.433-1.032 9.584-1.076c.165-.048.294-.177.341-.343.044-.153 1.075-3.816 1.075-8.582s-1.031-8.428-1.075-8.582zm-18.96.547c.938-.234 4.259-.965 9.035-.965s8.097.731 9.035.965c.121.479.372 1.569.588 3.039-1.247-.301-4.686-1.004-9.623-1.004s-8.376.703-9.623 1.004c.216-1.47.468-2.56.588-3.039zm18.07 16.07c-.938.234-4.259.965-9.035.965s-8.097-.731-9.035-.965c-.234-.93-.965-4.139-.965-8.035 0-1.429.099-2.762.235-3.928.603-.161 4.27-1.072 9.765-1.072s9.162.911 9.765 1.072c.136 1.166.235 2.499.235 3.928 0 3.896-.73 7.104-.965 8.035zm-12.628-9.823c-.039-.009-.975-.212-1.907-.212s-1.868.203-1.907.212c-.19.042-.339.19-.381.381-.009.04-.212.975-.212 1.907s.203 1.868.212 1.907c.042.19.19.339.381.381.039.009.975.212 1.907.212s1.868-.203 1.907-.212c.19-.042.339-.19.381-.381.009-.04.212-.975.212-1.907s-.203-1.868-.212-1.907c-.042-.19-.19-.339-.381-.381zm-.535 3.66c-.654.11-2.09.11-2.744 0-.055-.327-.128-.857-.128-1.372s.073-1.044.128-1.372c.654-.11 2.09-.11 2.744 0 .055.327.128.857.128 1.372s-.073 1.044-.128 1.372z"/></svg> <select id="homeMonth" onchange="onMonthChange(this.value)"></select> <span class="chev"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,15.5c-.26,0-.51-.1-.71-.29L5.29,9.21c-.39-.39-.39-1.02,0-1.41s1.02-.39,1.41,0l5.29,5.29,5.29-5.29c.39-.39,1.02-.39,1.41,0s.39,1.02,0,1.41l-5.99,5.99c-.2,.2-.45,.29-.71,.29Z"/></svg></span></div>
+            <button class="btn btn-ghost" onclick="openExport()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z"/></svg> Export</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-rooms"><div class="stat-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m7 13.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 13.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m18 13.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m7 17.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 17.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m18 17.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 9.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 5.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m18 9.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m20.616 5.5h-2.616v-1.5c0-1.275-1.201-2.591-2.52-2.759-1.258-.16-2.429-.241-3.48-.241s-2.222.081-3.48.241c-1.319.168-2.52 1.483-2.52 2.759v5h-2.5c-1.285 0-2.5 1.287-2.5 2.649v9.801c0 .204.125.389.314.464.111.045 2.805 1.086 10.686 1.086s10.575-1.041 10.686-1.086c.19-.075.314-.26.314-.464v-13.36c0-1.428-1.069-2.59-2.384-2.59zm1.384 15.585c-.9.256-3.818.915-10 .915s-9.1-.659-10-.915v-9.436c0-.802.771-1.649 1.5-1.649h3c.276 0 .5-.224.5-.5v-5.5c0-.786.815-1.661 1.646-1.767 1.217-.155 2.346-.233 3.354-.233s2.138.078 3.354.233c.831.105 1.646.98 1.646 1.767v2c0 .276.224.5.5.5h3.116c.828 0 1.384.822 1.384 1.59z"/></svg></div><div class="stat-body"><div class="stat-label">ห้องทั้งหมด</div><div class="stat-number" id="hRooms">0</div><div class="stat-sub">ห้อง</div></div></div>
+          <div class="stat-card stat-elec"><div class="stat-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.915,9.158c-.095-.126-.243-.201-.401-.201h-5.084l1.313-5.833c.042-.185-.024-.378-.172-.498-.082-.066-2.029-1.626-4.348-1.626-2.375,0-4.312,1.561-4.393,1.627-.083,.068-.143,.162-.169,.267l-2.661,10.688c-.037,.149-.003,.307,.091,.429,.095,.121,.24,.192,.394,.192h4.86l-.984,8.239c-.02,.167,.05,.328,.174,.441,.185,.169,.418,.111,.465,.097,7.594-2.263,10.856-12.927,10.992-13.379,.045-.151,.016-.315-.078-.442Zm-10.465,12.61l.957-8.007c.017-.142-.028-.284-.123-.391-.095-.107-.231-.168-.374-.168H5.126L7.59,3.306c.433-.316,1.925-1.306,3.633-1.306,1.528,0,2.925,.846,3.473,1.224l-1.379,6.123c-.034,.148,.002,.304,.097,.422s.238,.188,.391,.188h5.014c-.792,2.231-3.785,9.616-9.368,11.811Z"/></svg></div><div class="stat-body"><div class="stat-label">ค่าไฟรวม</div><div class="stat-number" id="hElec">0</div><div class="stat-sub">บาท</div></div></div>
+          <div class="stat-card stat-water"><div class="stat-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,24c-2.671,0-5.182-1.04-7.071-2.929-3.899-3.899-3.899-10.243,0-14.142L12,.013l7.067,6.912c3.903,3.903,3.903,10.247,.004,14.146h0c-1.889,1.889-4.4,2.929-7.071,2.929Zm0-22.588L5.632,7.64c-3.505,3.505-3.505,9.215,.004,12.724,1.7,1.699,3.96,2.636,6.364,2.636s4.664-.937,6.364-2.636h0c3.509-3.509,3.509-9.219,0-12.728L12,1.412Zm-3,8.588c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm6,6c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm-5.949,2h1.149l4.8-8h-1.149l-4.8,8Z"/></svg></div><div class="stat-body"><div class="stat-label">ค่าน้ำรวม</div><div class="stat-number" id="hWater">0</div><div class="stat-sub">บาท</div></div></div>
+          <div class="stat-card stat-total"><div class="stat-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.5,6H4.5c-1.146,0-2.221-.567-2.872-1.499,.634-.907,1.685-1.501,2.872-1.501H23.5c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H4.5C2.015,2,0,4.015,0,6.5v11c0,2.485,2.015,4.5,4.5,4.5H21.5c1.381,0,2.5-1.119,2.5-2.5V8.5c0-1.381-1.119-2.5-2.5-2.5Zm1.5,13.5c0,.827-.673,1.5-1.5,1.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V6.5c0-.348,.051-.684,.146-1.001,.846,.942,2.064,1.501,3.354,1.501H21.5c.827,0,1.5,.673,1.5,1.5v11Zm-2-5.5c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Z"/></svg></div><div class="stat-body"><div class="stat-label">ยอดรวมทั้งสิ้น</div><div class="stat-number" id="hTotal">0 <span class="stat-unit">บาท</span></div><div class="stat-sub">บาท</div></div></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-scroll">
+            <table id="homeTable">
+              <thead>
+                <tr class="group-row">
+                  <th class="th-room" rowspan="2">
+                    <span class="th-sortable" onclick="sortBy('home','room')">เลขห้อง <span class="sort-ind" id="si-home-room"></span></span>
+                    <div class="th-search"><input placeholder="ค้นหาห้อง" oninput="setSearch('home','room',this.value)"></div>
+                  </th>
+                  <th class="th-name" rowspan="2">
+                    <span class="th-sortable" onclick="sortBy('home','name')">ชื่อ <span class="sort-ind" id="si-home-name"></span></span>
+                    <div class="th-search"><input placeholder="ค้นหาชื่อ" oninput="setSearch('home','name',this.value)"></div>
+                  </th>
+                  <th class="gh-elec th-sortable" colspan="3" onclick="sortBy('home','eM')">ค่าไฟฟ้า <span class="sort-ind" id="si-home-eM"></span></th>
+                  <th class="gh-water th-sortable" colspan="3" onclick="sortBy('home','wM')">ค่าน้ำประปา <span class="sort-ind" id="si-home-wM"></span></th>
+                  <th class="gh-mid" rowspan="2">ค่าส่วนกลาง</th>
+                  <th class="gh-total th-sortable" rowspan="2" onclick="sortBy('home','total')">รวมสิทธิ์ <span class="sort-ind" id="si-home-total"></span><br><span class="th-total-sub">(ไฟ+น้ำ+ค่าห้อง+100)</span></th>
+                  <th rowspan="2" style="width:30px"></th>
+                </tr>
+                <tr>
+                  <th class="sub-elec">หลัง-ก่อน</th><th class="sub-elec">หน่วย(×7)</th><th class="sub-elec">รวม</th>
+                  <th class="sub-water">หลัง-ก่อน</th><th class="sub-water">หน่วย(×17)</th><th class="sub-water">รวม</th>
+                </tr>
+              </thead>
+              <tbody id="homeBody"></tbody>
+              <tfoot id="homeFoot"></tfoot>
+            </table>
+          </div>
+          <div class="table-footer">
+            <div class="perpage">แสดง <select id="homePerPage" onchange="renderHome()"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="9999">ทั้งหมด</option></select> รายการ</div>
+            <div class="pager" id="homePager"></div>
+          </div>
+        </div>
+        <div class="note-box"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5,11c-3.584,0-6.5,2.916-6.5,6.5s2.916,6.5,6.5,6.5,6.5-2.916,6.5-6.5-2.916-6.5-6.5-6.5Zm0,12c-3.033,0-5.5-2.467-5.5-5.5s2.467-5.5,5.5-5.5,5.5,2.467,5.5,5.5-2.467,5.5-5.5,5.5Zm1-8c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm-.5,2.5v3c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-3c0-.276,.224-.5,.5-.5s.5,.224,.5,.5Zm-7,6c0,.276-.224,.5-.5,.5H4.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C0,2.019,2.019,0,4.5,0H13.5c2.481,0,4.5,2.019,4.5,4.5v4c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5V4.5c0-1.93-1.57-3.5-3.5-3.5H4.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h6c.276,0,.5,.224,.5,.5ZM13.5,6H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5H13.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-2,5H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h7c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-4,4c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5h-3c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h3Z"/></svg> <b>เคล็ดลับ:</b> กดที่หัวข้อ <b>เลขห้อง / ชื่อ / ค่าไฟ / ค่าน้ำ / รวมสิทธิ์</b> เพื่อเรียงลำดับ · พิมพ์ในช่องค้นหาใต้หัวข้อเพื่อกรอง · กดที่แถวเพื่อไปหน้าบิลรายเดือน</div>
+      </section>
+
+      <!-- ═══════ PAGE: ROOMS ═══════ -->
+      <section class="page" id="page-rooms">
+        <div class="page-header">
+          <div class="page-title"><h1>ห้องพัก</h1><p>จัดการข้อมูลห้องและผู้เช่า</p></div>
+          <div class="header-actions"><button class="btn btn-add" onclick="openRoomModal()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,23c-6.065,0-11-4.935-11-11S5.935,1,12,1s11,4.935,11,11-4.935,11-11,11Zm5-11c0,.276-.224.5-.5.5h-4v4c0,.276-.224.5-.5.5s-.5-.224-.5-.5v-4h-4c-.276,0-.5-.224-.5-.5s.224-.5.5-.5h4v-4c0-.276.224-.5.5-.5s.5.224.5.5v4h4c.276,0,.5.224.5.5Z"/></svg> เพิ่มห้อง</button></div>
+        </div>
+        <div class="table-card">
+          <div class="table-scroll">
+            <table style="min-width:760px">
+              <thead>
+                <tr>
+                  <th class="th-room"><span class="th-sortable" onclick="sortBy('rooms','room')">เลขห้อง <span class="sort-ind" id="si-rooms-room"></span></span></th>
+                  <th><span class="th-sortable" onclick="sortBy('rooms','type')">ประเภท <span class="sort-ind" id="si-rooms-type"></span></span></th>
+                  <th class="th-name"><span class="th-sortable" onclick="sortBy('rooms','name')">ชื่อคนพัก <span class="sort-ind" id="si-rooms-name"></span></span></th>
+                  <th>จำนวนคน</th>
+                  <th>วันที่ออก</th>
+                  <th>สถานะ</th>
+                  <th style="width:120px">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="roomsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="note-box"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5,11c-3.584,0-6.5,2.916-6.5,6.5s2.916,6.5,6.5,6.5,6.5-2.916,6.5-6.5-2.916-6.5-6.5-6.5Zm0,12c-3.033,0-5.5-2.467-5.5-5.5s2.467-5.5,5.5-5.5,5.5,2.467,5.5,5.5-2.467,5.5-5.5,5.5Zm1-8c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm-.5,2.5v3c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-3c0-.276,.224-.5,.5-.5s.5,.224,.5,.5Zm-7,6c0,.276-.224,.5-.5,.5H4.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C0,2.019,2.019,0,4.5,0H13.5c2.481,0,4.5,2.019,4.5,4.5v4c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5V4.5c0-1.93-1.57-3.5-3.5-3.5H4.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h6c.276,0,.5,.224,.5,.5ZM13.5,6H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5H13.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-2,5H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h7c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-4,4c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5h-3c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h3Z"/></svg> <b>ชื่อบุคคล, ประเภทห้อง, จำนวนคนพัก, วันที่ออก</b> สามารถปรับเปลี่ยนได้ (กดปุ่มแก้ไข) · ถ้า <b>ชื่อว่าง</b> ระบบจะถือว่าเป็น <b>ห้องว่าง</b> ทันที · ประเภทห้องมีผลต่อค่าเช่า: <b>แอร์ = 4,000</b> / <b>พัดลม = 3,500</b> · เมื่อถึง <b>วันที่ออก</b> ระบบจะล้างข้อมูลผู้เช่าอัตโนมัติ</div>
+      </section>
+
+      <!-- ═══════ PAGE: BILL ═══════ -->
+      <section class="page" id="page-bill">
+        <div class="page-header">
+          <div class="page-title"><h1>บิลรายเดือน</h1><p id="billSubtitle">กรอกเลขมิเตอร์ — ระบบคำนวณให้อัตโนมัติ</p></div>
+          <div class="header-actions">
+            <div class="date-pill"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.925 4.418c-.047-.166-.176-.295-.341-.343-.074-.022-.989-.281-2.584-.54v-2.035c0-.276-.224-.5-.5-.5s-.5.224-.5.5v1.889c-1.565-.211-3.591-.389-6-.389s-4.435.178-6 .389v-1.889c0-.276-.224-.5-.5-.5s-.5.224-.5.5v2.036c-1.595.259-2.51.518-2.584.54-.165.048-.294.177-.341.343-.044.153-1.075 3.816-1.075 8.582s1.031 8.428 1.075 8.582c.047.166.176.295.341.343.151.044 3.774 1.076 9.584 1.076s9.433-1.032 9.584-1.076c.165-.048.294-.177.341-.343.044-.153 1.075-3.816 1.075-8.582s-1.031-8.428-1.075-8.582zm-18.96.547c.938-.234 4.259-.965 9.035-.965s8.097.731 9.035.965c.121.479.372 1.569.588 3.039-1.247-.301-4.686-1.004-9.623-1.004s-8.376.703-9.623 1.004c.216-1.47.468-2.56.588-3.039zm18.07 16.07c-.938.234-4.259.965-9.035.965s-8.097-.731-9.035-.965c-.234-.93-.965-4.139-.965-8.035 0-1.429.099-2.762.235-3.928.603-.161 4.27-1.072 9.765-1.072s9.162.911 9.765 1.072c.136 1.166.235 2.499.235 3.928 0 3.896-.73 7.104-.965 8.035zm-12.628-9.823c-.039-.009-.975-.212-1.907-.212s-1.868.203-1.907.212c-.19.042-.339.19-.381.381-.009.04-.212.975-.212 1.907s.203 1.868.212 1.907c.042.19.19.339.381.381.039.009.975.212 1.907.212s1.868-.203 1.907-.212c.19-.042.339-.19.381-.381.009-.04.212-.975.212-1.907s-.203-1.868-.212-1.907c-.042-.19-.19-.339-.381-.381zm-.535 3.66c-.654.11-2.09.11-2.744 0-.055-.327-.128-.857-.128-1.372s.073-1.044.128-1.372c.654-.11 2.09-.11 2.744 0 .055.327.128.857.128 1.372s-.073 1.044-.128 1.372z"/></svg> <select id="billMonth" onchange="onMonthChange(this.value)"></select> <span class="chev"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,15.5c-.26,0-.51-.1-.71-.29L5.29,9.21c-.39-.39-.39-1.02,0-1.41s1.02-.39,1.41,0l5.29,5.29,5.29-5.29c.39-.39,1.02-.39,1.41,0s.39,1.02,0,1.41l-5.99,5.99c-.2,.2-.45,.29-.71,.29Z"/></svg></span></div>
+            <button class="btn btn-ghost" onclick="openExport()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z"/></svg> Export</button>
+            <button class="btn btn-add" onclick="saveBill()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-2.142-12.348c.192,.197,.188,.515-.011,.706l-9.792,9.5c-.412,.412-.966,.642-1.556,.642s-1.144-.229-1.561-.646L3.158,12.864c-.202-.188-.212-.505-.022-.706,.188-.203,.507-.212,.706-.022l4.793,4.5c.479,.477,1.264,.466,1.719,.011L20.152,7.142c.199-.193,.517-.188,.706,.011Z"/></svg> บันทึกทั้งหมด</button>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-scroll">
+            <table id="billTable">
+              <thead>
+                <tr class="group-row">
+                  <th class="th-room" rowspan="2">
+                    <span class="th-sortable" onclick="sortBy('bill','room')">เลขห้อง <span class="sort-ind" id="si-bill-room"></span></span>
+                    <div class="th-search"><input placeholder="ค้นหาห้อง" oninput="setSearch('bill','room',this.value)"></div>
+                  </th>
+                  <th class="th-name" rowspan="2">
+                    <span class="th-sortable" onclick="sortBy('bill','name')">ชื่อ <span class="sort-ind" id="si-bill-name"></span></span>
+                    <div class="th-search"><input placeholder="ค้นหาชื่อ" oninput="setSearch('bill','name',this.value)"></div>
+                  </th>
+                  <th class="gh-elec" colspan="4"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.915,9.158c-.095-.126-.243-.201-.401-.201h-5.084l1.313-5.833c.042-.185-.024-.378-.172-.498-.082-.066-2.029-1.626-4.348-1.626-2.375,0-4.312,1.561-4.393,1.627-.083,.068-.143,.162-.169,.267l-2.661,10.688c-.037,.149-.003,.307,.091,.429,.095,.121,.24,.192,.394,.192h4.86l-.984,8.239c-.02,.167,.05,.328,.174,.441,.185,.169,.418,.111,.465,.097,7.594-2.263,10.856-12.927,10.992-13.379,.045-.151,.016-.315-.078-.442Zm-10.465,12.61l.957-8.007c.017-.142-.028-.284-.123-.391-.095-.107-.231-.168-.374-.168H5.126L7.59,3.306c.433-.316,1.925-1.306,3.633-1.306,1.528,0,2.925,.846,3.473,1.224l-1.379,6.123c-.034,.148,.002,.304,.097,.422s.238,.188,.391,.188h5.014c-.792,2.231-3.785,9.616-9.368,11.811Z"/></svg> ค่าไฟฟ้า</th>
+                  <th class="gh-water" colspan="4"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,24c-2.671,0-5.182-1.04-7.071-2.929-3.899-3.899-3.899-10.243,0-14.142L12,.013l7.067,6.912c3.903,3.903,3.903,10.247,.004,14.146h0c-1.889,1.889-4.4,2.929-7.071,2.929Zm0-22.588L5.632,7.64c-3.505,3.505-3.505,9.215,.004,12.724,1.7,1.699,3.96,2.636,6.364,2.636s4.664-.937,6.364-2.636h0c3.509-3.509,3.509-9.219,0-12.728L12,1.412Zm-3,8.588c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm6,6c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm-5.949,2h1.149l4.8-8h-1.149l-4.8,8Z"/></svg> ค่าน้ำประปา</th>
+                  <th class="gh-mid" rowspan="2">ส่วนกลาง<br><span class="th-total-sub">ล็อก 100</span></th>
+                  <th class="gh-total" rowspan="2">รวมสิทธิ์</th>
+                </tr>
+                <tr>
+                  <th class="sub-elec">หลัง</th><th class="sub-elec">ก่อน</th><th class="sub-elec">หน่วย(×7)</th><th class="sub-elec">รวม</th>
+                  <th class="sub-water">หลัง</th><th class="sub-water">ก่อน</th><th class="sub-water">หน่วย(×17)</th><th class="sub-water">รวม</th>
+                </tr>
+              </thead>
+              <tbody id="billBody"></tbody>
+              <tfoot id="billFoot"></tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="note-box"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5,11c-3.584,0-6.5,2.916-6.5,6.5s2.916,6.5,6.5,6.5,6.5-2.916,6.5-6.5-2.916-6.5-6.5-6.5Zm0,12c-3.033,0-5.5-2.467-5.5-5.5s2.467-5.5,5.5-5.5,5.5,2.467,5.5,5.5-2.467,5.5-5.5,5.5Zm1-8c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm-.5,2.5v3c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-3c0-.276,.224-.5,.5-.5s.5,.224,.5,.5Zm-7,6c0,.276-.224,.5-.5,.5H4.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C0,2.019,2.019,0,4.5,0H13.5c2.481,0,4.5,2.019,4.5,4.5v4c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5V4.5c0-1.93-1.57-3.5-3.5-3.5H4.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h6c.276,0,.5,.224,.5,.5ZM13.5,6H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5H13.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-2,5H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h7c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-4,4c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5h-3c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h3Z"/></svg> <b>ช่องที่ล็อก:</b> หน่วย, รวม, ค่าส่วนกลาง, รวมสิทธิ์ — คำนวณอัตโนมัติ · <b>กรอกแค่:</b> เลขมิเตอร์ หลัง/ก่อน และแก้ชื่อได้ · ค่าห้องดึงจากประเภท (แอร์/พัดลม) ในหน้า ห้องพัก</div>
+      </section>
+
+      <!-- ═══════ PAGE: PAY ═══════ -->
+      <section class="page" id="page-pay">
+        <div class="page-header">
+          <div class="page-title"><h1>รับชำระเงิน</h1><p>ช่องทางการโอนเงิน</p></div>
+          <div class="header-actions"><button class="btn btn-ghost btn-sm desktop-only" onclick="openPayEdit()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.94,1.061c-1.368-1.367-3.76-1.365-5.124,0L1.611,17.265c-1.039,1.04-1.611,2.421-1.611,3.89v2.346c0,.276,.224,.5,.5,.5H2.846c1.47,0,2.851-.572,3.889-1.611L22.86,6.265c.579-.581,.953-1.262,1.08-1.972,.216-1.202-.148-2.381-1-3.232ZM6.028,21.682c-.85,.851-1.979,1.318-3.182,1.318H1v-1.846c0-1.202,.468-2.332,1.318-3.183L15.292,4.999l3.709,3.709L6.028,21.682ZM22.956,4.116c-.115,.642-.5,1.138-.803,1.441l-2.444,2.444-3.709-3.709,2.525-2.525c.986-.988,2.718-.99,3.709,0,.617,.617,.88,1.473,.723,2.349Z"/></svg> แก้ไขข้อมูล</button></div>
+        </div>
+        <div class="pay-wrap">
+          <div class="pay-card">
+            <div class="pay-row">
+              <div class="pay-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19,12c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm5,.5v3c0,.827-.673,1.5-1.5,1.5h-.213c-.853,1.846-2.389,3.278-4.287,3.997v.503c0,1.379-1.122,2.5-2.5,2.5-1.208,0-2.217-.86-2.45-2h-3.101c-.232,1.14-1.242,2-2.45,2-1.378,0-2.5-1.121-2.5-2.5v-.502C1.688,19.748-.336,16.469,.046,12.897c.134-1.248,.589-2.408,1.279-3.408-.819-.551-1.325-1.479-1.325-2.489,0-1.654,1.346-3,3-3,.276,0,.5,.224,.5,.5s-.224,.5-.5,.5c-1.103,0-2,.897-2,2,0,.7,.364,1.341,.948,1.702,1.486-1.652,3.679-2.702,6.065-2.702h7.118c.343-1.285,1.326-2.303,2.811-2.893,.465-.184,.99-.127,1.402,.153,.411,.279,.657,.743,.657,1.241v3.124c1.121,.873,1.994,2.054,2.497,3.374h.003c.603,0,1.5,.399,1.5,1.5Zm-1,0c0-.401-.273-.494-.504-.5h-.353c-.216,0-.408-.14-.476-.345-.437-1.342-1.312-2.54-2.461-3.375-.13-.094-.207-.244-.207-.404v-3.374c0-.169-.08-.319-.219-.414-.141-.096-.314-.112-.471-.051-.923,.366-2.068,1.107-2.282,2.551-.038,.251-.248,.427-.51,.427l-7.505-.015c-3.549,0-6.612,2.637-6.973,6.003-.344,3.22,1.553,6.166,4.615,7.165,.206,.067,.345,.259,.345,.476v.856c0,.827,.673,1.5,1.5,1.5s1.5-.673,1.5-1.5c0-.276,.224-.5,.5-.5h4c.276,0,.5,.224,.5,.5,0,.827,.673,1.5,1.5,1.5s1.5-.673,1.5-1.5v-.856c0-.217,.139-.408,.345-.476,1.885-.614,3.398-2.021,4.152-3.857,.077-.188,.26-.311,.462-.311h.541c.276,0,.5-.225,.5-.5v-3ZM6.5,4.5c.276,0,.5-.224,.5-.5,0-1.654,1.346-3,3-3s3,1.346,3,3c0,.276,.224,.5,.5,.5s.5-.224,.5-.5c0-2.206-1.794-4-4-4S6,1.794,6,4c0,.276,.224,.5,.5,.5Z"/></svg></div>
+              <div class="pay-info"><label id="payBankName">ธนาคารกสิกรไทย</label><b id="payBankAcc">000-0-00000-0</b></div>
+              <button class="pay-copy" onclick="copyText('payBankAcc')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.975,3.768l-2.742-2.742c-.651-.651-1.553-1.025-2.475-1.025h-4.758c-2.206,0-4,1.794-4,4h-1c-2.206,0-4,1.794-4,4v12c0,2.206,1.794,4,4,4h7c2.206,0,4-1.794,4-4h1c2.206,0,4-1.794,4-4V6.243c0-.935-.364-1.813-1.025-2.475Zm-.707,.707c.158,.158,.282,.337,.391,.525h-2.658c-.552,0-1-.449-1-1V1.344c.189,.109,.37,.233,.525,.388l2.742,2.742Zm-7.268,18.525H6c-1.654,0-3-1.346-3-3V8c0-1.654,1.346-3,3-3h1v11c0,2.206,1.794,4,4,4h5c0,1.654-1.346,3-3,3Zm8-7c0,1.654-1.346,3-3,3h-7c-1.654,0-3-1.346-3-3V4c0-1.654,1.346-3,3-3h4.758c.082,0,.161,.016,.242,.024v2.976c0,1.103,.897,2,2,2h2.976c.008,.081,.024,.16,.024,.243v9.757Z"/></svg> คัดลอก</button>
+            </div>
+            <div class="pay-row">
+              <div class="pay-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m11.5 1h-7c-1.93 0-3.5 1.57-3.5 3.5v15c0 1.93 1.57 3.5 3.5 3.5h6c.276 0 .5.224.5.5s-.224.5-.5.5h-6c-2.481 0-4.5-2.019-4.5-4.5v-15c0-2.481 2.019-4.5 4.5-4.5h7c2.481 0 4.5 2.019 4.5 4.5v6c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-6c0-1.93-1.57-3.5-3.5-3.5zm8.5 21c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm3-3c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm-3 0c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm-2-4.5v2c0 .827-.673 1.5-1.5 1.5h-2c-.827 0-1.5-.673-1.5-1.5v-2c0-.827.673-1.5 1.5-1.5h2c.827 0 1.5.673 1.5 1.5zm-1 0c0-.275-.225-.5-.5-.5h-2c-.275 0-.5.225-.5.5v2c0 .275.225.5.5.5h2c.275 0 .5-.225.5-.5zm1 6v2c0 .827-.673 1.5-1.5 1.5h-2c-.827 0-1.5-.673-1.5-1.5v-2c0-.827.673-1.5 1.5-1.5h2c.827 0 1.5.673 1.5 1.5zm-1 0c0-.275-.225-.5-.5-.5h-2c-.275 0-.5.225-.5.5v2c0 .275.225.5.5.5h2c.275 0 .5-.225.5-.5zm7-6v2c0 .827-.673 1.5-1.5 1.5h-2c-.827 0-1.5-.673-1.5-1.5v-2c0-.827.673-1.5 1.5-1.5h2c.827 0 1.5.673 1.5 1.5zm-1 0c0-.275-.225-.5-.5-.5h-2c-.275 0-.5.225-.5.5v2c0 .275.225.5.5.5h2c.275 0 .5-.225.5-.5zm-1.5.25c-.414 0-.75.336-.75.75s.336.75.75.75.75-.336.75-.75-.336-.75-.75-.75zm-6 0c-.414 0-.75.336-.75.75s.336.75.75.75.75-.336.75-.75-.336-.75-.75-.75zm0 6c-.414 0-.75.336-.75.75s.336.75.75.75.75-.336.75-.75-.336-.75-.75-.75zm-9-.75c-.276 0-.5.224-.5.5s.224.5.5.5h3c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm.658-12h1.684c.576 0 1.158.309 1.158 1 0 .276.224.5.5.5s.5-.224.5-.5c0-1.159-.907-2-2.158-2h-.342v-.5c0-.276-.224-.5-.5-.5s-.5.224-.5.5v.5h-.342c-1.19 0-2.158.968-2.158 2.158 0 1.059.759 1.954 1.795 2.127l2.237.415c.561.094.968.574.968 1.142 0 .639-.52 1.158-1.158 1.158h-1.684c-.576 0-1.158-.31-1.158-1 0-.276-.224-.5-.5-.5s-.5.224-.5.5c0 1.159.907 2 2.158 2h.342v.5c0 .276.224.5.5.5s.5-.224.5-.5v-.5h.342c1.19 0 2.158-.968 2.158-2.158 0-1.059-.759-1.954-1.795-2.127l-2.237-.415c-.561-.094-.968-.574-.968-1.142 0-.639.52-1.158 1.158-1.158z"/></svg></div>
+              <div class="pay-info"><label>พร้อมเพย์ (PromptPay)</label><b id="payPromptpay">000-000-0000</b></div>
+              <button class="pay-copy" onclick="copyText('payPromptpay')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.975,3.768l-2.742-2.742c-.651-.651-1.553-1.025-2.475-1.025h-4.758c-2.206,0-4,1.794-4,4h-1c-2.206,0-4,1.794-4,4v12c0,2.206,1.794,4,4,4h7c2.206,0,4-1.794,4-4h1c2.206,0,4-1.794,4-4V6.243c0-.935-.364-1.813-1.025-2.475Zm-.707,.707c.158,.158,.282,.337,.391,.525h-2.658c-.552,0-1-.449-1-1V1.344c.189,.109,.37,.233,.525,.388l2.742,2.742Zm-7.268,18.525H6c-1.654,0-3-1.346-3-3V8c0-1.654,1.346-3,3-3h1v11c0,2.206,1.794,4,4,4h5c0,1.654-1.346,3-3,3Zm8-7c0,1.654-1.346,3-3,3h-7c-1.654,0-3-1.346-3-3V4c0-1.654,1.346-3,3-3h4.758c.082,0,.161,.016,.242,.024v2.976c0,1.103,.897,2,2,2h2.976c.008,.081,.024,.16,.024,.243v9.757Z"/></svg> คัดลอก</button>
+            </div>
+            <div class="pay-row">
+              <div class="pay-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm-5,21.797v-3.297c0-.827.673-1.5,1.5-1.5h7c.827,0,1.5.673,1.5,1.5v3.297c-1.501.769-3.201,1.203-5,1.203s-3.499-.434-5-1.203Zm11-.582v-2.715c0-1.379-1.122-2.5-2.5-2.5h-7c-1.378,0-2.5,1.121-2.5,2.5v2.715c-3.008-1.965-5-5.362-5-9.215C1,5.935,5.935,1,12,1s11,4.935,11,11c0,3.853-1.992,7.25-5,9.215Zm-6-15.215c-2.206,0-4,1.794-4,4s1.794,4,4,4,4-1.794,4-4-1.794-4-4-4Zm0,7c-1.654,0-3-1.346-3-3s1.346-3,3-3,3,1.346,3,3-1.346,3-3,3Z"/></svg></div>
+              <div class="pay-info"><label>ชื่อบัญชี</label><b id="payAccName">นาย เจ้าของ หอพัก</b></div>
+            </div>
+          </div>
+          <div class="qr-card">
+            <h3><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m11.5 1h-7c-1.93 0-3.5 1.57-3.5 3.5v15c0 1.93 1.57 3.5 3.5 3.5h6c.276 0 .5.224.5.5s-.224.5-.5.5h-6c-2.481 0-4.5-2.019-4.5-4.5v-15c0-2.481 2.019-4.5 4.5-4.5h7c2.481 0 4.5 2.019 4.5 4.5v6c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-6c0-1.93-1.57-3.5-3.5-3.5zm8.5 21c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm3-3c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm-3 0c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm-2-4.5v2c0 .827-.673 1.5-1.5 1.5h-2c-.827 0-1.5-.673-1.5-1.5v-2c0-.827.673-1.5 1.5-1.5h2c.827 0 1.5.673 1.5 1.5zm-1 0c0-.275-.225-.5-.5-.5h-2c-.275 0-.5.225-.5.5v2c0 .275.225.5.5.5h2c.275 0 .5-.225.5-.5zm1 6v2c0 .827-.673 1.5-1.5 1.5h-2c-.827 0-1.5-.673-1.5-1.5v-2c0-.827.673-1.5 1.5-1.5h2c.827 0 1.5.673 1.5 1.5zm-1 0c0-.275-.225-.5-.5-.5h-2c-.275 0-.5.225-.5.5v2c0 .275.225.5.5.5h2c.275 0 .5-.225.5-.5zm7-6v2c0 .827-.673 1.5-1.5 1.5h-2c-.827 0-1.5-.673-1.5-1.5v-2c0-.827.673-1.5 1.5-1.5h2c.827 0 1.5.673 1.5 1.5zm-1 0c0-.275-.225-.5-.5-.5h-2c-.275 0-.5.225-.5.5v2c0 .275.225.5.5.5h2c.275 0 .5-.225.5-.5zm-1.5.25c-.414 0-.75.336-.75.75s.336.75.75.75.75-.336.75-.75-.336-.75-.75-.75zm-6 0c-.414 0-.75.336-.75.75s.336.75.75.75.75-.336.75-.75-.336-.75-.75-.75zm0 6c-.414 0-.75.336-.75.75s.336.75.75.75.75-.336.75-.75-.336-.75-.75-.75zm-9-.75c-.276 0-.5.224-.5.5s.224.5.5.5h3c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm.658-12h1.684c.576 0 1.158.309 1.158 1 0 .276.224.5.5.5s.5-.224.5-.5c0-1.159-.907-2-2.158-2h-.342v-.5c0-.276-.224-.5-.5-.5s-.5.224-.5.5v.5h-.342c-1.19 0-2.158.968-2.158 2.158 0 1.059.759 1.954 1.795 2.127l2.237.415c.561.094.968.574.968 1.142 0 .639-.52 1.158-1.158 1.158h-1.684c-.576 0-1.158-.31-1.158-1 0-.276-.224-.5-.5-.5s-.5.224-.5.5c0 1.159.907 2 2.158 2h.342v.5c0 .276.224.5.5.5s.5-.224.5-.5v-.5h.342c1.19 0 2.158-.968 2.158-2.158 0-1.059-.759-1.954-1.795-2.127l-2.237-.415c-.561-.094-.968-.574-.968-1.142 0-.639.52-1.158 1.158-1.158z"/></svg> สแกน QR เพื่อโอนเงิน</h3>
+            <div class="qr-box"><img id="qrImg" src="" alt="QR PromptPay"></div>
+            <p class="qr-note">สแกนด้วยแอปธนaคารใดก็ได้<br>กรุณาส่งสลิปยืนยันหลังโอนเงิน</p>
+          </div>
+          <div class="note-box" style="max-width:440px;margin:18px auto 0"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5,11c-3.584,0-6.5,2.916-6.5,6.5s2.916,6.5,6.5,6.5,6.5-2.916,6.5-6.5-2.916-6.5-6.5-6.5Zm0,12c-3.033,0-5.5-2.467-5.5-5.5s2.467-5.5,5.5-5.5,5.5,2.467,5.5,5.5-2.467,5.5-5.5,5.5Zm1-8c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm-.5,2.5v3c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-3c0-.276,.224-.5,.5-.5s.5,.224,.5,.5Zm-7,6c0,.276-.224,.5-.5,.5H4.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C0,2.019,2.019,0,4.5,0H13.5c2.481,0,4.5,2.019,4.5,4.5v4c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5V4.5c0-1.93-1.57-3.5-3.5-3.5H4.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h6c.276,0,.5,.224,.5,.5ZM13.5,6H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5H13.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-2,5H4.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h7c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5Zm-4,4c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5h-3c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5h3Z"/></svg> ข้อมูลนี้จะถูกแนบไปในไฟล์บิลของผู้เช่าแต่ละคนตอน Export · กดปุ่ม <b>แก้ไขข้อมูล</b> เพื่อเปลี่ยนเลขบัญชี/พร้อมเพย์/QR</div>
+        </div>
+      </section>
+
+      <!-- ═══════ PAGE: SETTINGS ═══════ -->
+      <section class="page" id="page-settings">
+        <div class="page-header"><div class="page-title"><h1>ตั้งค่า</h1><p>อัตราค่าบริการ & Google Sheets</p></div></div>
+        <div style="max-width:520px">
+          <div class="section-title"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m6.5 11c-3.584 0-6.5 2.916-6.5 6.5s2.916 6.5 6.5 6.5 6.5-2.916 6.5-6.5-2.916-6.5-6.5-6.5zm0 12c-3.032 0-5.5-2.468-5.5-5.5s2.468-5.5 5.5-5.5 5.5 2.468 5.5 5.5-2.468 5.5-5.5 5.5zm2.161-5.888c.214-.318.339-.701.339-1.112 0-1.103-.897-2-1.997-2h-.003v-.5c0-.276-.224-.5-.5-.5s-.5.224-.5.5v.495l-.481-.003c-.4-.018-.78.152-1.064.436-.285.283-.442.66-.443 1.062l-.009 4.012c0 .826.669 1.5 1.494 1.503l.504.002v.494c0 .276.224.5.5.5s.5-.224.5-.5v-.491l.995.003c1.105-.017 2.005-.92 2.005-2.013 0-.871-.56-1.614-1.339-1.888zm-3.65-1.621c0-.134.053-.26.147-.354.095-.093.22-.145.353-.145h.002l1.487.008c.552 0 1 .448 1 1s-.448 1-1 1h-1.992zm2.979 4.521-2.489-.009c-.275 0-.498-.226-.498-.501l.003-1.503h2.995c.552 0 1 .448 1 1 0 .56-.448 1.004-1.011 1.013zm8.51-20.012c-4.275 0-7.5 1.505-7.5 3.5v4c0 1.995 3.225 3.5 7.5 3.5 2.851 0 5.228-.671 6.5-1.709v2.209c0 1.183-2.67 2.5-6.5 2.5-.495 0-.983-.022-1.453-.067-.258-.013-.519.176-.545.451-.025.274.176.519.451.545.5.047 1.021.071 1.547.071 2.851 0 5.228-.671 6.5-1.709v2.209c0 1.183-2.67 2.5-6.5 2.5-.33 0-.653-.011-.97-.029-.307-.027-.514.194-.529.469-.017.276.193.513.469.529.336.021.681.031 1.03.031 2.851 0 5.228-.671 6.5-1.709v2.209c0 1.183-2.67 2.5-6.5 2.5-.837 0-1.651-.064-2.419-.19-.267-.047-.53.139-.574.412-.045.272.14.529.412.574.821.136 1.689.204 2.581.204 4.275 0 7.5-1.505 7.5-3.5v-16c0-1.995-3.225-3.5-7.5-3.5zm0 1c3.83 0 6.5 1.317 6.5 2.5s-2.67 2.5-6.5 2.5-6.5-1.317-6.5-2.5 2.67-2.5 6.5-2.5zm0 9c-3.83 0-6.5-1.317-6.5-2.5v-2.209c1.272 1.037 3.649 1.709 6.5 1.709s5.228-.671 6.5-1.709v2.209c0 1.183-2.67 2.5-6.5 2.5z"/></svg> อัตราค่าบริการ</div>
+          <div class="table-card" style="padding:20px">
+            <div class="fg-row">
+              <div class="fg"><label class="fg-label"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.915,9.158c-.095-.126-.243-.201-.401-.201h-5.084l1.313-5.833c.042-.185-.024-.378-.172-.498-.082-.066-2.029-1.626-4.348-1.626-2.375,0-4.312,1.561-4.393,1.627-.083,.068-.143,.162-.169,.267l-2.661,10.688c-.037,.149-.003,.307,.091,.429,.095,.121,.24,.192,.394,.192h4.86l-.984,8.239c-.02,.167,.05,.328,.174,.441,.185,.169,.418,.111,.465,.097,7.594-2.263,10.856-12.927,10.992-13.379,.045-.151,.016-.315-.078-.442Zm-10.465,12.61l.957-8.007c.017-.142-.028-.284-.123-.391-.095-.107-.231-.168-.374-.168H5.126L7.59,3.306c.433-.316,1.925-1.306,3.633-1.306,1.528,0,2.925,.846,3.473,1.224l-1.379,6.123c-.034,.148,.002,.304,.097,.422s.238,.188,.391,.188h5.014c-.792,2.231-3.785,9.616-9.368,11.811Z"/></svg> ค่าไฟ / หน่วย</label><input class="fg-input" id="s_elec" type="number" value="7" onchange="saveSettings()"></div>
+              <div class="fg"><label class="fg-label"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,24c-2.671,0-5.182-1.04-7.071-2.929-3.899-3.899-3.899-10.243,0-14.142L12,.013l7.067,6.912c3.903,3.903,3.903,10.247,.004,14.146h0c-1.889,1.889-4.4,2.929-7.071,2.929Zm0-22.588L5.632,7.64c-3.505,3.505-3.505,9.215,.004,12.724,1.7,1.699,3.96,2.636,6.364,2.636s4.664-.937,6.364-2.636h0c3.509-3.509,3.509-9.219,0-12.728L12,1.412Zm-3,8.588c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm6,6c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm-5.949,2h1.149l4.8-8h-1.149l-4.8,8Z"/></svg> ค่าน้ำ / หน่วย</label><input class="fg-input" id="s_water" type="number" value="17" onchange="saveSettings()"></div>
+            </div>
+            <div class="fg-row">
+              <div class="fg"><label class="fg-label"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10.047,7.955c0-1.305-.939-2.394-2.177-2.628v-1.267c.447-.212,1.146-.716,1.519-1.876,.084-.263-.06-.545-.323-.629-.264-.085-.544,.06-.629,.322-.3,.933-.85,1.229-1.065,1.312-.222-.085-.769-.383-1.067-1.312-.084-.263-.364-.407-.629-.322-.263,.084-.407,.366-.323,.629,.373,1.16,1.072,1.664,1.519,1.876v1.267c-.595,.113-1.121,.423-1.507,.861l-1.083-.64c.045-.493-.034-1.353-.84-2.264-.183-.207-.5-.227-.706-.044-.207,.184-.227,.499-.043,.706,.65,.735,.625,1.363,.587,1.592-.185,.148-.718,.473-1.668,.257-.267-.056-.536,.11-.597,.379-.061,.27,.109,.537,.378,.598,.299,.066,.573,.095,.822,.095,.737,0,1.255-.247,1.561-.455l1.079,.637c-.103,.284-.159,.589-.159,.908s.056,.624,.159,.908l-1.08,.638c-.409-.278-1.196-.624-2.382-.361-.27,.061-.439,.328-.378,.598,.061,.269,.324,.438,.597,.379,.953-.217,1.486,.11,1.667,.255,.04,.235,.062,.862-.585,1.594-.183,.206-.164,.522,.043,.705,.095,.085,.213,.126,.332,.126,.138,0,.275-.057,.375-.169,.807-.911,.885-1.771,.84-2.264l1.083-.64c.386,.437,.912,.748,1.507,.861v1.267c-.447,.212-1.146,.717-1.519,1.876-.084,.263,.06,.545,.323,.629,.051,.017,.103,.024,.153,.024,.211,0,.408-.135,.476-.347,.373-1.159,1.131-1.337,1.155-1.342,.238-.043,.412-.25,.412-.492v-1.616c1.238-.235,2.177-1.324,2.177-2.628Zm-2.677,1.676c-.925,0-1.677-.752-1.677-1.676s.752-1.676,1.677-1.676,1.677,.752,1.677,1.676-.752,1.676-1.677,1.676Z"/><path d="M20.254,10.341c-.01-1.704-.041-5.009-.085-5.7-.128-1.994-1.826-3.557-3.865-3.557s-3.736,1.562-3.865,3.557c-.045,.701-.076,4-.085,5.701-1.847,.975-2.746,2.908-2.746,5.897,0,5.918,3.578,6.677,6.696,6.677s6.696-.759,6.696-6.677c0-2.99-.899-4.925-2.746-5.898Zm-3.95,11.575c-3.419,0-5.696-.966-5.696-5.677,0-2.746,.778-4.376,2.45-5.129,.178-.081,.293-.258,.294-.454,.009-2.089,.043-5.319,.084-5.951,.095-1.47,1.354-2.621,2.867-2.621s2.772,1.151,2.867,2.621c.042,.651,.076,3.936,.085,5.95,0,.196,.116,.373,.295,.454,1.671,.753,2.45,2.383,2.45,5.13,0,4.032-1.65,5.677-5.696,5.677Z"/><path d="M16.804,13.768v-3.637c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v3.637c-1.155,.232-2.028,1.252-2.028,2.472,0,1.391,1.134,2.522,2.528,2.522s2.528-1.132,2.528-2.522c0-1.22-.873-2.24-2.028-2.472Zm-.5,3.994c-.843,0-1.528-.683-1.528-1.522s.686-1.521,1.528-1.521,1.528,.683,1.528,1.521-.686,1.522-1.528,1.522Z"/></svg> ค่าห้องแอร์</label><input class="fg-input" id="s_air" type="number" value="4000" onchange="saveSettings()"></div>
+              <div class="fg"><label class="fg-label"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m22.98,10.346c-.721-.804-1.714-1.278-2.798-1.336-1.661-.081-4.16.444-5.969.983-.179-.197-.378-.371-.603-.515.164-.177.324-.352.494-.533,1.375-1.456,2.797-2.96,2.89-4.691C17.113,2.032,15.42.126,13.219.006c-1.067-.062-2.08.302-2.872,1.013-.804.721-1.278,1.715-1.336,2.798-.09,1.676.443,4.161.982,5.969-.197.179-.371.378-.515.603-.178-.164-.354-.325-.534-.495-1.455-1.374-2.96-2.795-4.69-2.888C2.054,6.892.127,8.581.006,10.781c-.059,1.06.302,2.08,1.014,2.873.721.804,1.714,1.278,2.798,1.336.125.006.255.01.389.01,1.655,0,3.907-.494,5.58-.993.178.197.378.371.603.515-.164.177-.324.352-.494.533-1.375,1.456-2.796,2.96-2.889,4.691-.119,2.222,1.574,4.127,3.775,4.247.074.004.147.006.221.006.979,0,1.914-.358,2.651-1.02.804-.721,1.278-1.714,1.336-2.798.09-1.676-.443-4.161-.982-5.969.197-.179.371-.378.515-.603.178.164.354.325.534.495,1.455,1.374,2.96,2.795,4.69,2.888.073.004.146.006.22.006,2.125,0,3.91-1.654,4.027-3.781.059-1.06-.302-2.08-1.014-2.873Zm-10.98,3.654c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Zm-1.991-10.129c.044-.817.401-1.565,1.006-2.108.595-.533,1.36-.801,2.149-.759,1.651.09,2.921,1.524,2.832,3.195-.073,1.365-1.367,2.734-2.618,4.059-.258.274-.51.543-.751.81-.202-.043-.412-.068-.627-.068-.4,0-.78.082-1.129.224-.468-1.64-.941-3.886-.863-5.353ZM3.87,13.991c-.816-.043-1.564-.4-2.106-1.005-.533-.594-.803-1.358-.76-2.15.091-1.651,1.554-2.924,3.196-2.831,1.364.073,2.732,1.365,4.057,2.616.274.259.544.511.811.753-.043.203-.068.412-.068.627,0,.4.082.78.224,1.129-1.64.469-3.883.943-5.354.863Zm10.121,6.138c-.044.816-.401,1.565-1.006,2.107-.593.533-1.359.801-2.149.759-1.651-.09-2.921-1.524-2.832-3.195.073-1.365,1.367-2.734,2.618-4.058.258-.275.51-.544.751-.81.202.043.412.068.627.068.4,0,.78-.082,1.129-.224.468,1.64.941,3.886.863,5.353Zm5.809-4.134c-1.364-.073-2.732-1.365-4.057-2.616-.274-.259-.544-.511-.811-.753.043-.202.068-.412.068-.627,0-.4-.082-.78-.224-1.129,1.64-.469,3.886-.938,5.354-.862.816.043,1.564.4,2.106,1.005.533.594.803,1.358.76,2.15-.091,1.651-1.53,2.932-3.196,2.831Z"/></svg> ค่าห้องพัดลม</label><input class="fg-input" id="s_fan" type="number" value="3500" onchange="saveSettings()"></div>
+            </div>
+            <div class="fg" style="margin-bottom:0"><label class="fg-label"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m7 13.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 13.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m18 13.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m7 17.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 17.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m18 17.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 9.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m12.5 5.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m18 9.5h-1c-.276 0-.5.224-.5.5s.224.5.5.5h1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5z"/><path d="m20.616 5.5h-2.616v-1.5c0-1.275-1.201-2.591-2.52-2.759-1.258-.16-2.429-.241-3.48-.241s-2.222.081-3.48.241c-1.319.168-2.52 1.483-2.52 2.759v5h-2.5c-1.285 0-2.5 1.287-2.5 2.649v9.801c0 .204.125.389.314.464.111.045 2.805 1.086 10.686 1.086s10.575-1.041 10.686-1.086c.19-.075.314-.26.314-.464v-13.36c0-1.428-1.069-2.59-2.384-2.59zm1.384 15.585c-.9.256-3.818.915-10 .915s-9.1-.659-10-.915v-9.436c0-.802.771-1.649 1.5-1.649h3c.276 0 .5-.224.5-.5v-5.5c0-.786.815-1.661 1.646-1.767 1.217-.155 2.346-.233 3.354-.233s2.138.078 3.354.233c.831.105 1.646.98 1.646 1.767v2c0 .276.224.5.5.5h3.116c.828 0 1.384.822 1.384 1.59z"/></svg> ค่าส่วนกลาง / ห้อง</label><input class="fg-input" id="s_mid" type="number" value="100" onchange="saveSettings()"></div>
+          </div>
+          <div class="section-title"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m22.5 16.5h-1.679c.093-1.248.179-3.078.179-4.5 0-6.653-1.139-9.521-1.188-9.639-.058-.142-.178-.25-.325-.292-.153-.043-3.797-1.069-8.537-1.069s-8.385 1.025-8.538 1.069c-.082.023-.156.068-.217.128-.049.049-1.191 1.216-1.195 2.977-.006 2.111.497 2.65.797 2.784.063.028.133.043.203.043h2v14c0 .247.181.458.425.494.137.021 3.397.506 8.625.506 3.226 0 5.669-.195 7.151-.358 1.261-.139 2.324-1.02 2.647-2.191.101-.361.151-.731.151-1.101v-2.35c0-.276-.224-.5-.5-.5zm-20.5-11.324c.003-1.097.603-1.917.824-2.183.198-.052.604-.153 1.176-.272v4.279h-1.762c-.088-.19-.241-.688-.238-1.824zm6.5 14.324c0 .778-.51 2.227-1.736 2.244-.798-.068-1.396-.136-1.764-.182v-8.062h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5h-4v-4.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5h-4v-4.469c1.495-.263 3.596-.531 5.95-.531 3.909 0 7.122.739 8.016.965.212.655.788 2.738.975 6.535h-3.94c-.276 0-.5.224-.5.5s.224.5.5.5h3.979c.013.476.021.976.021 1.5 0 1.41-.09 3.289-.182 4.5h-10.819c-.276 0-.5.224-.5.5zm13.5-.15c0 .279-.038.559-.115.834-.215.781-.936 1.369-1.793 1.463-1.457.161-3.862.353-7.042.353-1.693 0-3.187-.053-4.43-.125.595-.679.88-1.629.88-2.375v-2h12.5z"/></svg> Google Sheets (เฟส 2)</div>
+          <div class="note-box" style="margin-top:0">
+            <b>สถาปัตยกรรมที่วางไว้:</b><br>
+            • ไฟล์: <b>RentHub_System</b><br>
+            • ชีตรายเดือน: <b>(เดือนย่อ)_(พ.ศ.)</b> เช่น 01_2569<br>
+            • ขึ้นเดือนใหม่ → Apps Script สร้างชีตใหม่อัตโนมัติ + คัดลอกชื่อผู้เช่าค้างไว้<br><br>
+            ส่วนนี้จะเปิดใช้งานในเฟส 2 เมื่อต่อ Apps Script เรียบร้อย
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mnav">
+  <ul>
+    <li class="active" data-page="home" onclick="goPage('home')"><span class="mn-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22,5.724V2c0-.552-.447-1-1-1s-1,.448-1,1v2.366L14.797,.855c-1.699-1.146-3.895-1.146-5.594,0L2.203,5.579c-1.379,.931-2.203,2.48-2.203,4.145v9.276c0,2.757,2.243,5,5,5h3c.553,0,1-.448,1-1V15c0-.551,.448-1,1-1h4c.552,0,1,.449,1,1v8c0,.552,.447,1,1,1h3c2.757,0,5-2.243,5-5V9.724c0-1.581-.744-3.058-2-4Zm0,13.276c0,1.654-1.346,3-3,3h-2v-7c0-1.654-1.346-3-3-3h-4c-1.654,0-3,1.346-3,3v7h-2c-1.654,0-3-1.346-3-3V9.724c0-.999,.494-1.929,1.322-2.487L10.322,2.513c1.02-.688,2.336-.688,3.355,0l7,4.724c.828,.558,1.322,1.488,1.322,2.487v9.276Z"/></svg></span>หน้าหลัก</li>
+    <li data-page="rooms" onclick="goPage('rooms')"><span class="mn-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m7.006,24c-1.858,0-3.633-.727-4.956-2.05C.554,20.454-.18,18.38.038,16.261c.289-2.817,2.325-5.228,5.066-5.997,1.302-.365,2.61-.354,3.893.032L18.561.732c.473-.472,1.1-.732,1.768-.732h2.172c.827,0,1.5.673,1.5,1.5v2.171c0,.668-.26,1.296-.732,1.768l-1.561,1.561h-2.707v3h-3v2.707l-2.296,2.296c.386,1.283.396,2.591.031,3.893-.769,2.741-3.178,4.777-5.997,5.067-.244.025-.489.038-.732.038Zm-.004-13.001c-.542,0-1.085.076-1.628.228-2.349.659-4.094,2.724-4.342,5.137-.187,1.818.442,3.596,1.725,4.879,1.283,1.283,3.06,1.912,4.88,1.725,2.413-.248,4.478-1.993,5.136-4.342.338-1.204.301-2.413-.111-3.596l-.103-.296,2.441-2.441v-3.293h3v-3h3.293l1.268-1.268c.283-.283.439-.66.439-1.061V1.5c0-.276-.225-.5-.5-.5h-2.172c-.395,0-.781.16-1.061.439l-10.002,10.001-.296-.103c-.649-.226-1.307-.339-1.968-.339Zm-2.002,7.001c0,.552.448,1,1,1s1-.448,1-1-.448-1-1-1-1,.448-1,1Z"/></svg></span>ห้องพัก</li>
+    <li data-page="bill" onclick="goPage('bill')"><span class="mn-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5,15c0-1.103,.897-2,2-2h6.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-.551,0-1,.449-1,1v2c0,.551,.449,1,1,1h7.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-1.103,0-2-.897-2-2v-2Zm.5-5h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm0-4h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm11.5,17.5c0,.276-.224,.5-.5,.5H5.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C1,2.019,3.019,0,5.5,0h5.515c1.735,0,3.368,.676,4.597,1.904l3.484,3.485c.824,.824,1.413,1.857,1.702,2.987,.038,.15,.005,.309-.09,.431s-.24,.193-.395,.193h-5.813c-1.379,0-2.5-1.122-2.5-2.5V1.087c-.322-.058-.651-.087-.985-.087H5.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h11c.276,0,.5,.224,.5,.5ZM13,6.5c0,.827,.673,1.5,1.5,1.5h5.129c-.275-.712-.697-1.361-1.24-1.904l-3.484-3.485c-.552-.551-1.199-.97-1.904-1.243V6.5Zm8.79,10.281l-3.422-.55c-.793-.127-1.368-.803-1.368-1.605,0-.896,.729-1.626,1.626-1.626h2.8c.623,0,1.204,.335,1.517,.875,.139,.24,.445,.32,.683,.183,.239-.138,.321-.444,.183-.683-.49-.848-1.402-1.375-2.382-1.375h-.926v-1.5c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v1.5h-.874c-1.448,0-2.626,1.178-2.626,2.626,0,1.296,.93,2.387,2.21,2.593l3.422,.55c.793,.127,1.368,.803,1.368,1.605,0,.896-.729,1.626-1.626,1.626h-2.8c-.623,0-1.204-.335-1.517-.875-.139-.24-.448-.321-.683-.183-.239,.138-.321,.444-.183,.683,.49,.848,1.402,1.375,2.382,1.375h.926v1.5c0,.276,.224,.5,.5,.5s.5-.224,.5-.5v-1.5h.874c1.448,0,2.626-1.178,2.626-2.626,0-1.296-.93-2.387-2.21-2.593Z"/></svg></span>บิล</li>
+    <li data-page="pay" onclick="goPage('pay')"><span class="mn-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m19.475,1.025H4.475C1.993,1.025-.025,3.044-.025,5.525v9c0,2.481,2.019,4.5,4.5,4.5h7c.276,0,.5-.224.5-.5s-.224-.5-.5-.5h-7c-1.93,0-3.5-1.57-3.5-3.5v-5.5h22v2.5c0,.276.224.5.5.5s.5-.224.5-.5v-6c0-2.481-2.019-4.5-4.5-4.5Zm-15,1h15c1.758,0,3.204,1.308,3.449,3H1.025c.245-1.692,1.691-3,3.449-3ZM.975,8.025v-2h22v2H.975Zm1.942,6c0,1.103.897,2,2,2s2-.897,2-2-.897-2-2-2-2,.897-2,2Zm3,0c0,.552-.449,1-1,1s-1-.448-1-1,.449-1,1-1,1,.448,1,1Zm16.058,6c-1.103,0-2,.897-2,2s.897,2,2,2,2-.897,2-2-.897-2-2-2Zm0,3c-.551,0-1-.448-1-1s.449-1,1-1,1,.448,1,1-.449,1-1,1Zm-4-7c0-1.103-.897-2-2-2s-2,.897-2,2,.897,2,2,2,2-.897,2-2Zm-2,1c-.551,0-1-.448-1-1s.449-1,1-1,1,.448,1,1-.449,1-1,1Zm5.937-2.257l-5,9c-.091.164-.262.257-.438.257-.082,0-.166-.021-.242-.062-.242-.135-.329-.438-.194-.681l5-9c.134-.241.438-.326.68-.194.242.135.329.438.194.681Z"/></svg></span>รับชำระ</li>
+    <li data-page="settings" onclick="goPage('settings')"><span class="mn-ic"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m16 7c2.075 0 3-.925 3-3s-.925-3-3-3-3 .925-3 3 .925 3 3 3zm0-5c1.514 0 2 .486 2 2s-.486 2-2 2-2-.486-2-2 .486-2 2-2zm0 7c-2.075 0-3 .925-3 3s.925 3 3 3 3-.925 3-3-.925-3-3-3zm0 5c-1.514 0-2-.486-2-2s.486-2 2-2 2 .486 2 2-.486 2-2 2zm0 3c-2.075 0-3 .925-3 3s.925 3 3 3 3-.925 3-3-.925-3-3-3zm0 5c-1.514 0-2-.486-2-2s.486-2 2-2 2 .486 2 2-.486 2-2 2zm-8-21c-2.075 0-3 .925-3 3s.925 3 3 3 3-.925 3-3-.925-3-3-3zm0 5c-1.514 0-2-.486-2-2s.486-2 2-2 2 .486 2 2-.486 2-2 2zm0 3c-2.075 0-3 .925-3 3s.925 3 3 3 3-.925 3-3-.925-3-3-3zm0 5c-1.514 0-2-.486-2-2s.486-2 2-2 2 .486 2 2-.486 2-2 2zm0 3c-2.075 0-3 .925-3 3s.925 3 3 3 3-.925 3-3-.925-3-3-3zm0 5c-1.514 0-2-.486-2-2s.486-2 2-2 2 .486 2 2-.486 2-2 2z"/></svg></span>เพิ่มเติม</li>
+  </ul>
+</nav>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailModal" onclick="closeOverlay(event,'detailModal')">
+  <div class="sheet">
+    <button class="sheet-close" onclick="closeModal('detailModal')">✕</button>
+    <div style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:8px">รายละเอียดห้อง</div>
+    <div class="detail-roomnum" id="dRoom">—</div>
+    <div class="detail-tenant" id="dTenant">—</div>
+    <div class="detail-block">
+      <div class="detail-block-title elec"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.915,9.158c-.095-.126-.243-.201-.401-.201h-5.084l1.313-5.833c.042-.185-.024-.378-.172-.498-.082-.066-2.029-1.626-4.348-1.626-2.375,0-4.312,1.561-4.393,1.627-.083,.068-.143,.162-.169,.267l-2.661,10.688c-.037,.149-.003,.307,.091,.429,.095,.121,.24,.192,.394,.192h4.86l-.984,8.239c-.02,.167,.05,.328,.174,.441,.185,.169,.418,.111,.465,.097,7.594-2.263,10.856-12.927,10.992-13.379,.045-.151,.016-.315-.078-.442Zm-10.465,12.61l.957-8.007c.017-.142-.028-.284-.123-.391-.095-.107-.231-.168-.374-.168H5.126L7.59,3.306c.433-.316,1.925-1.306,3.633-1.306,1.528,0,2.925,.846,3.473,1.224l-1.379,6.123c-.034,.148,.002,.304,.097,.422s.238,.188,.391,.188h5.014c-.792,2.231-3.785,9.616-9.368,11.811Z"/></svg> ค่าไฟฟ้า</div>
+      <div class="detail-grid2">
+        <div class="di"><label>เลขมิเตอร์ (ก่อน)</label><b class="small" id="dEB">—</b></div>
+        <div class="di"><label>เลขมิเตอร์ (หลัง)</label><b class="small" id="dEA">—</b></div>
+        <div class="di"><label>หน่วยที่ใช้</label><b class="hl-elec" id="dEU">—</b></div>
+        <div class="di"><label>รวมเงิน</label><b class="hl-elec" id="dEM">—</b></div>
+      </div>
+    </div>
+    <div class="detail-block">
+      <div class="detail-block-title water"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,24c-2.671,0-5.182-1.04-7.071-2.929-3.899-3.899-3.899-10.243,0-14.142L12,.013l7.067,6.912c3.903,3.903,3.903,10.247,.004,14.146h0c-1.889,1.889-4.4,2.929-7.071,2.929Zm0-22.588L5.632,7.64c-3.505,3.505-3.505,9.215,.004,12.724,1.7,1.699,3.96,2.636,6.364,2.636s4.664-.937,6.364-2.636h0c3.509-3.509,3.509-9.219,0-12.728L12,1.412Zm-3,8.588c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm6,6c-.552,0-1,.448-1,1s.448,1,1,1,1-.448,1-1-.448-1-1-1Zm-5.949,2h1.149l4.8-8h-1.149l-4.8,8Z"/></svg> ค่าน้ำประปา</div>
+      <div class="detail-grid2">
+        <div class="di"><label>เลขมิเตอร์ (ก่อน)</label><b class="small" id="dWB">—</b></div>
+        <div class="di"><label>เลขมิเตอร์ (หลัง)</label><b class="small" id="dWA">—</b></div>
+        <div class="di"><label>หน่วยที่ใช้</label><b class="hl-water" id="dWU">—</b></div>
+        <div class="di"><label>รวมเงิน</label><b class="hl-water" id="dWM">—</b></div>
+      </div>
+    </div>
+    <div class="detail-line"><span class="lbl">ค่าส่วนกลาง</span><span class="v" id="dMid">100 บาท</span></div>
+    <div class="detail-line"><span class="lbl" id="dRentLabel">ค่าเช่าห้อง</span><span class="v" id="dRent">—</span></div>
+    <div class="detail-grand"><span class="lbl">รวมทั้งสิ้น</span><span class="v" id="dTotal">—</span></div>
+    <div class="detail-actions"><button class="btn btn-add" style="flex:1;justify-content:center" onclick="goBillFromDetail()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5,15c0-1.103,.897-2,2-2h6.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-.551,0-1,.449-1,1v2c0,.551,.449,1,1,1h7.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-1.103,0-2-.897-2-2v-2Zm.5-5h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm0-4h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm11.5,17.5c0,.276-.224,.5-.5,.5H5.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C1,2.019,3.019,0,5.5,0h5.515c1.735,0,3.368,.676,4.597,1.904l3.484,3.485c.824,.824,1.413,1.857,1.702,2.987,.038,.15,.005,.309-.09,.431s-.24,.193-.395,.193h-5.813c-1.379,0-2.5-1.122-2.5-2.5V1.087c-.322-.058-.651-.087-.985-.087H5.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h11c.276,0,.5,.224,.5,.5ZM13,6.5c0,.827,.673,1.5,1.5,1.5h5.129c-.275-.712-.697-1.361-1.24-1.904l-3.484-3.485c-.552-.551-1.199-.97-1.904-1.243V6.5Zm8.79,10.281l-3.422-.55c-.793-.127-1.368-.803-1.368-1.605,0-.896,.729-1.626,1.626-1.626h2.8c.623,0,1.204,.335,1.517,.875,.139,.24,.445,.32,.683,.183,.239-.138,.321-.444,.183-.683-.49-.848-1.402-1.375-2.382-1.375h-.926v-1.5c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v1.5h-.874c-1.448,0-2.626,1.178-2.626,2.626,0,1.296,.93,2.387,2.21,2.593l3.422,.55c.793,.127,1.368,.803,1.368,1.605,0,.896-.729,1.626-1.626,1.626h-2.8c-.623,0-1.204-.335-1.517-.875-.139-.24-.448-.321-.683-.183-.239,.138-.321,.444-.183,.683,.49,.848,1.402,1.375,2.382,1.375h.926v1.5c0,.276,.224,.5,.5,.5s.5-.224,.5-.5v-1.5h.874c1.448,0,2.626-1.178,2.626-2.626,0-1.296-.93-2.387-2.21-2.593Z"/></svg> ไปหน้าบิล</button></div>
+  </div>
+</div>
+
+<!-- ROOM EDIT MODAL -->
+<div class="overlay" id="roomModal" onclick="closeOverlay(event,'roomModal')">
+  <div class="sheet">
+    <button class="sheet-close" onclick="closeModal('roomModal')">✕</button>
+    <h3 class="sheet-title" id="roomModalTitle">เพิ่มห้อง</h3>
+    <input type="hidden" id="rm_idx" value="">
+    <div class="fg"><label class="fg-label">เลขห้อง *</label><input class="fg-input" id="rm_room" placeholder="เช่น 101"></div>
+    <div class="fg"><label class="fg-label">ประเภทห้อง (มีผลต่อค่าเช่า)</label>
+      <div class="seg" id="rm_typeSeg">
+        <button class="seg-btn active" data-type="air" onclick="selRoomType('air')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10.047,7.955c0-1.305-.939-2.394-2.177-2.628v-1.267c.447-.212,1.146-.716,1.519-1.876,.084-.263-.06-.545-.323-.629-.264-.085-.544,.06-.629,.322-.3,.933-.85,1.229-1.065,1.312-.222-.085-.769-.383-1.067-1.312-.084-.263-.364-.407-.629-.322-.263,.084-.407,.366-.323,.629,.373,1.16,1.072,1.664,1.519,1.876v1.267c-.595,.113-1.121,.423-1.507,.861l-1.083-.64c.045-.493-.034-1.353-.84-2.264-.183-.207-.5-.227-.706-.044-.207,.184-.227,.499-.043,.706,.65,.735,.625,1.363,.587,1.592-.185,.148-.718,.473-1.668,.257-.267-.056-.536,.11-.597,.379-.061,.27,.109,.537,.378,.598,.299,.066,.573,.095,.822,.095,.737,0,1.255-.247,1.561-.455l1.079,.637c-.103,.284-.159,.589-.159,.908s.056,.624,.159,.908l-1.08,.638c-.409-.278-1.196-.624-2.382-.361-.27,.061-.439,.328-.378,.598,.061,.269,.324,.438,.597,.379,.953-.217,1.486,.11,1.667,.255,.04,.235,.062,.862-.585,1.594-.183,.206-.164,.522,.043,.705,.095,.085,.213,.126,.332,.126,.138,0,.275-.057,.375-.169,.807-.911,.885-1.771,.84-2.264l1.083-.64c.386,.437,.912,.748,1.507,.861v1.267c-.447,.212-1.146,.717-1.519,1.876-.084,.263,.06,.545,.323,.629,.051,.017,.103,.024,.153,.024,.211,0,.408-.135,.476-.347,.373-1.159,1.131-1.337,1.155-1.342,.238-.043,.412-.25,.412-.492v-1.616c1.238-.235,2.177-1.324,2.177-2.628Zm-2.677,1.676c-.925,0-1.677-.752-1.677-1.676s.752-1.676,1.677-1.676,1.677,.752,1.677,1.676-.752,1.676-1.677,1.676Z"/><path d="M20.254,10.341c-.01-1.704-.041-5.009-.085-5.7-.128-1.994-1.826-3.557-3.865-3.557s-3.736,1.562-3.865,3.557c-.045,.701-.076,4-.085,5.701-1.847,.975-2.746,2.908-2.746,5.897,0,5.918,3.578,6.677,6.696,6.677s6.696-.759,6.696-6.677c0-2.99-.899-4.925-2.746-5.898Zm-3.95,11.575c-3.419,0-5.696-.966-5.696-5.677,0-2.746,.778-4.376,2.45-5.129,.178-.081,.293-.258,.294-.454,.009-2.089,.043-5.319,.084-5.951,.095-1.47,1.354-2.621,2.867-2.621s2.772,1.151,2.867,2.621c.042,.651,.076,3.936,.085,5.95,0,.196,.116,.373,.295,.454,1.671,.753,2.45,2.383,2.45,5.13,0,4.032-1.65,5.677-5.696,5.677Z"/><path d="M16.804,13.768v-3.637c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v3.637c-1.155,.232-2.028,1.252-2.028,2.472,0,1.391,1.134,2.522,2.528,2.522s2.528-1.132,2.528-2.522c0-1.22-.873-2.24-2.028-2.472Zm-.5,3.994c-.843,0-1.528-.683-1.528-1.522s.686-1.521,1.528-1.521,1.528,.683,1.528,1.521-.686,1.522-1.528,1.522Z"/></svg> แอร์ (4,000)</button>
+        <button class="seg-btn" data-type="fan" onclick="selRoomType('fan')"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m22.98,10.346c-.721-.804-1.714-1.278-2.798-1.336-1.661-.081-4.16.444-5.969.983-.179-.197-.378-.371-.603-.515.164-.177.324-.352.494-.533,1.375-1.456,2.797-2.96,2.89-4.691C17.113,2.032,15.42.126,13.219.006c-1.067-.062-2.08.302-2.872,1.013-.804.721-1.278,1.715-1.336,2.798-.09,1.676.443,4.161.982,5.969-.197.179-.371.378-.515.603-.178-.164-.354-.325-.534-.495-1.455-1.374-2.96-2.795-4.69-2.888C2.054,6.892.127,8.581.006,10.781c-.059,1.06.302,2.08,1.014,2.873.721.804,1.714,1.278,2.798,1.336.125.006.255.01.389.01,1.655,0,3.907-.494,5.58-.993.178.197.378.371.603.515-.164.177-.324.352-.494.533-1.375,1.456-2.796,2.96-2.889,4.691-.119,2.222,1.574,4.127,3.775,4.247.074.004.147.006.221.006.979,0,1.914-.358,2.651-1.02.804-.721,1.278-1.714,1.336-2.798.09-1.676-.443-4.161-.982-5.969.197-.179.371-.378.515-.603.178.164.354.325.534.495,1.455,1.374,2.96,2.795,4.69,2.888.073.004.146.006.22.006,2.125,0,3.91-1.654,4.027-3.781.059-1.06-.302-2.08-1.014-2.873Zm-10.98,3.654c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Zm-1.991-10.129c.044-.817.401-1.565,1.006-2.108.595-.533,1.36-.801,2.149-.759,1.651.09,2.921,1.524,2.832,3.195-.073,1.365-1.367,2.734-2.618,4.059-.258.274-.51.543-.751.81-.202-.043-.412-.068-.627-.068-.4,0-.78.082-1.129.224-.468-1.64-.941-3.886-.863-5.353ZM3.87,13.991c-.816-.043-1.564-.4-2.106-1.005-.533-.594-.803-1.358-.76-2.15.091-1.651,1.554-2.924,3.196-2.831,1.364.073,2.732,1.365,4.057,2.616.274.259.544.511.811.753-.043.203-.068.412-.068.627,0,.4.082.78.224,1.129-1.64.469-3.883.943-5.354.863Zm10.121,6.138c-.044.816-.401,1.565-1.006,2.107-.593.533-1.359.801-2.149.759-1.651-.09-2.921-1.524-2.832-3.195.073-1.365,1.367-2.734,2.618-4.058.258-.275.51-.544.751-.81.202.043.412.068.627.068.4,0,.78-.082,1.129-.224.468,1.64.941,3.886.863,5.353Zm5.809-4.134c-1.364-.073-2.732-1.365-4.057-2.616-.274-.259-.544-.511-.811-.753.043-.202.068-.412.068-.627,0-.4-.082-.78-.224-1.129,1.64-.469,3.886-.938,5.354-.862.816.043,1.564.4,2.106,1.005.533.594.803,1.358.76,2.15-.091,1.651-1.53,2.932-3.196,2.831Z"/></svg> พัดลม (3,500)</button>
+      </div>
+    </div>
+    <div class="fg"><label class="fg-label">ชื่อคนพัก <span style="color:var(--text-muted)">(ว่าง = ห้องว่าง)</span></label><input class="fg-input" id="rm_name" placeholder="เช่น เหมียว"></div>
+    <div class="fg-row">
+      <div class="fg"><label class="fg-label">จำนวนคนพัก</label><input class="fg-input" id="rm_people" type="number" value="1" min="1"></div>
+      <div class="fg"><label class="fg-label">วันที่ออก (ถ้ามี)</label><input class="fg-input" id="rm_checkout" type="date"></div>
+    </div>
+    <div class="fg-hint" id="rm_checkoutHint" style="display:none"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m11.5 13.5v-7c0-.276.224-.5.5-.5s.5.224.5.5v7c0 .276-.224.5-.5.5s-.5-.224-.5-.5zm.5 2.5c-.552 0-1 .448-1 1s.448 1 1 1 1-.448 1-1-.448-1-1-1zm11-4c0 4.667-1.051 9.509-1.062 9.558-.042.19-.19.339-.381.381-.048.011-4.891 1.062-9.557 1.062s-9.509-1.051-9.557-1.062c-.191-.042-.34-.19-.381-.381-.011-.049-1.062-4.891-1.062-9.558s1.051-9.509 1.062-9.558c.042-.19.19-.339.381-.381.048-.011 4.891-1.062 9.557-1.062s9.509 1.051 9.557 1.062c.191.042.34.19.381.381.011.049 1.062 4.891 1.062 9.558zm-1 0c0-3.879-.745-7.891-.973-9.027-1.136-.228-5.148-.973-9.027-.973s-7.891.745-9.027.973c-.228 1.137-.973 5.148-.973 9.027s.745 7.891.973 9.027c1.136.228 5.148.973 9.027.973s7.891-.745 9.027-.973c.228-1.137.973-5.148.973-9.027z"/></svg> เมื่อถึงวันที่ระบุ ระบบจะล้างข้อมูลผู้เช่าออกจากห้องนี้อัตโนมัติ</div>
+    <button class="btn btn-add" style="width:100%;justify-content:center;margin-top:8px" onclick="saveRoom()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-2.142-12.348c.192,.197,.188,.515-.011,.706l-9.792,9.5c-.412,.412-.966,.642-1.556,.642s-1.144-.229-1.561-.646L3.158,12.864c-.202-.188-.212-.505-.022-.706,.188-.203,.507-.212,.706-.022l4.793,4.5c.479,.477,1.264,.466,1.719,.011L20.152,7.142c.199-.193,.517-.188,.706,.011Z"/></svg> บันทึก</button>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="overlay" id="exportModal" onclick="closeOverlay(event,'exportModal')">
+  <div class="sheet">
+    <button class="sheet-close" onclick="closeModal('exportModal')">✕</button>
+    <h3 class="sheet-title"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z"/></svg> Export ข้อมูล</h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px">เลือกรูปแบบการดึงข้อมูล</p>
+    <div class="export-opt selected" id="exOptAll" onclick="selExport('all')">
+      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m17.952 10.525c-.168-3.401-.743-5.453-.957-6.113-.53-.131-1.877-.433-3.741-.636-.22-.024-.397-.189-.438-.407-.207-1.122-.765-1.869-2.816-1.869s-2.61.747-2.816 1.869c-.04.217-.218.383-.438.407-1.864.204-3.211.505-3.741.636-.251.779-1.005 3.495-1.005 8.088 0 4.653.766 7.361 1.011 8.108.713.223 3.17.892 6.989.892 2.41 0 4.254-.267 5.376-.49.271-.057.534.121.588.393.054.271-.122.534-.393.588-1.167.232-3.08.51-5.572.51-4.761 0-7.443-.985-7.555-1.027-.133-.049-.238-.152-.29-.284-.047-.119-1.155-2.989-1.155-8.688s1.109-8.571 1.156-8.69c.057-.145.179-.255.329-.297.062-.018 1.491-.417 3.798-.692.427-1.582 1.618-2.322 3.717-2.322s3.291.74 3.717 2.322c2.308.275 3.736.674 3.798.692.15.042.272.152.329.297.037.091.89 2.295 1.106 6.664.014.276-.199.511-.475.524-.304.002-.511-.199-.524-.475zm-2.452 3.975h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm0-5h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm-5.613-1.883c-.211-.177-.526-.148-.705.062-.83.991-1.765 1.895-2.782 2.691-.541-.423-1.061-.878-1.55-1.358-.197-.194-.515-.19-.707.007-.193.197-.19.514.007.707.611.599 1.267 1.162 1.95 1.674.178.134.422.133.6 0 1.195-.897 2.289-1.933 3.249-3.079.177-.212.149-.527-.062-.705zm-.705 5.062c-.83.991-1.765 1.895-2.782 2.691-.54-.423-1.06-.878-1.55-1.358-.198-.191-.513-.19-.708.008-.193.197-.19.514.007.707.612.599 1.268 1.162 1.95 1.674.178.133.422.133.6 0 1.195-.897 2.289-1.934 3.249-3.079.177-.212.149-.527-.062-.705s-.526-.148-.705.062zm13.818 6.658c0-1.469-1.195-2.664-2.664-2.664-.828 0-1.429-.54-1.429-1.285 0-.766.661-1.388 1.473-1.388.626 0 1.186.375 1.391.932.096.26.384.393.643.296.259-.096.392-.383.296-.642-.279-.756-.932-1.307-1.712-1.503l.003-.58c0-.276-.222-.501-.498-.502h-.002c-.275 0-.499.223-.5.498l-.002.54c-1.181.179-2.091 1.16-2.091 2.35 0 1.303 1.044 2.285 2.43 2.285.917 0 1.664.746 1.664 1.664s-.746 1.663-1.664 1.663c-.875 0-1.604-.683-1.66-1.555-.018-.275-.267-.492-.531-.467-.276.018-.485.256-.467.531.082 1.28 1.072 2.294 2.315 2.457l-.002.531c0 .276.222.501.498.502h.002c.275 0 .499-.223.5-.498l.002-.594c1.15-.295 2.006-1.331 2.006-2.571z"/></svg></div><div class="eo-text"><b>ทั้งหมด (1 ไฟล์)</b><span>ตารางรวมทุกห้อง — เลขมิเตอร์ + ค่าใช้จ่าย</span></div>
+    </div>
+    <div class="export-opt" id="exOptEach" onclick="selExport('each')">
+      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m17.5 11c-3.584 0-6.5 2.916-6.5 6.5s2.916 6.5 6.5 6.5 6.5-2.916 6.5-6.5-2.916-6.5-6.5-6.5zm0 12c-3.033 0-5.5-2.468-5.5-5.5s2.467-5.5 5.5-5.5 5.5 2.468 5.5 5.5-2.467 5.5-5.5 5.5zm3.35-6.857c.192.198.187.515-.012.707l-2.703 2.614c-.36.355-.835.533-1.311.533s-.949-.177-1.312-.531l-1.364-1.347c-.197-.193-.199-.51-.005-.707.194-.195.511-.198.707-.004l1.363 1.345c.337.329.886.327 1.223-.004l2.706-2.618c.199-.191.516-.187.707.012zm-10.85-5.537c0 1.32-1.074 2.395-2.395 2.395h-.605v.5c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-.5h-.83c-.884 0-1.693-.484-2.111-1.264-.13-.243-.039-.547.205-.677.244-.133.546-.039.677.204.243.454.714.736 1.229.736h2.435c.769 0 1.395-.626 1.395-1.395 0-.685-.49-1.264-1.166-1.376l-2.833-.473c-1.159-.193-2.001-1.187-2.001-2.362 0-1.32 1.074-2.395 2.395-2.395h.605v-.5c0-.276.224-.5.5-.5s.5.224.5.5v.5h.605c.884 0 1.693.484 2.111 1.264.131.243.04.546-.204.677-.243.131-.546.039-.677-.204-.244-.454-.715-.736-1.23-.736h-2.21c-.769 0-1.395.626-1.395 1.395 0 .685.49 1.264 1.166 1.376l2.833.473c1.159.193 2.001 1.187 2.001 2.362zm-.589 10.52c.158.227.102.538-.125.695l-2.833 1.971c-.172.119-.4.119-.571 0l-2.539-1.767-2.546 1.873c-.152.112-.354.129-.522.044-.169-.086-.275-.258-.275-.447v-18.995c0-2.481 2.019-4.5 4.5-4.5h9c2.481 0 4.5 2.019 4.5 4.5v4c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-4c0-1.93-1.57-3.5-3.5-3.5h-9c-1.93 0-3.5 1.57-3.5 3.5v18.006l2.038-1.499c.172-.128.406-.13.582-.008l2.547 1.772 2.548-1.771c.227-.157.539-.102.696.125z"/></svg></div><div class="eo-text"><b>รายห้อง (หลายไฟล์)</b><span>แยกไฟล์ต่อห้อง: เลขห้อง_วันที่ + ข้อมูลโอนเงิน</span></div>
+    </div>
+    <div class="fg" style="margin-top:8px"><label class="fg-label">เลือกห้อง (สำหรับรายห้อง)</label>
+      <select class="fg-input" id="exRoomSel" multiple size="5" style="height:auto"></select>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:5px">กด Ctrl/⌘ ค้างเพื่อเลือกหลายห้อง · ไม่เลือก = ทุกห้อง</div>
+    </div>
+    <button class="btn btn-add" style="width:100%;justify-content:center" onclick="doExport()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z"/></svg> ดาวน์โหลด</button>
+  </div>
+</div>
+
+<!-- PAY EDIT MODAL -->
+<div class="overlay" id="payEditModal" onclick="closeOverlay(event,'payEditModal')">
+  <div class="sheet">
+    <button class="sheet-close" onclick="closeModal('payEditModal')">✕</button>
+    <h3 class="sheet-title"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.94,1.061c-1.368-1.367-3.76-1.365-5.124,0L1.611,17.265c-1.039,1.04-1.611,2.421-1.611,3.89v2.346c0,.276,.224,.5,.5,.5H2.846c1.47,0,2.851-.572,3.889-1.611L22.86,6.265c.579-.581,.953-1.262,1.08-1.972,.216-1.202-.148-2.381-1-3.232ZM6.028,21.682c-.85,.851-1.979,1.318-3.182,1.318H1v-1.846c0-1.202,.468-2.332,1.318-3.183L15.292,4.999l3.709,3.709L6.028,21.682ZM22.956,4.116c-.115,.642-.5,1.138-.803,1.441l-2.444,2.444-3.709-3.709,2.525-2.525c.986-.988,2.718-.99,3.709,0,.617,.617,.88,1.473,.723,2.349Z"/></svg> แก้ไขข้อมูลการชำระเงิน</h3>
+    <div class="fg"><label class="fg-label">ธนาคาร</label><input class="fg-input" id="pe_bankName" value="ธนาคารกสิกรไทย"></div>
+    <div class="fg"><label class="fg-label">เลขบัญชี</label><input class="fg-input" id="pe_bankAcc" value="000-0-00000-0"></div>
+    <div class="fg"><label class="fg-label">พร้อมเพย์</label><input class="fg-input" id="pe_promptpay" value="000-000-0000"></div>
+    <div class="fg"><label class="fg-label">ชื่อบัญชี</label><input class="fg-input" id="pe_accName" value="นาย เจ้าของ หอพัก"></div>
+    <button class="btn btn-add" style="width:100%;justify-content:center" onclick="savePayInfo()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-2.142-12.348c.192,.197,.188,.515-.011,.706l-9.792,9.5c-.412,.412-.966,.642-1.556,.642s-1.144-.229-1.561-.646L3.158,12.864c-.202-.188-.212-.505-.022-.706,.188-.203,.507-.212,.706-.022l4.793,4.5c.479,.477,1.264,.466,1.719,.011L20.152,7.142c.199-.193,.517-.188,.706,.011Z"/></svg> บันทึก</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════ GOOGLE SHEETS API ═══════════ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbySpn6tvzlQ97kLysaVnf1Z3n_ELkYgwknCv3MQF_6AwCBmlmt0U3mnB-WA1ypckhQ/exec';
+
+/* GET: ดึงข้อมูลจาก Sheet */
+async function apiGet(params){
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(API_URL + '?' + qs);
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'API error');
+  return json.data;
+}
+/* POST: เขียนข้อมูลกลับ Sheet (text/plain เลี่ยง CORS preflight) */
+async function apiPost(payload){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'API error');
+  return json.data;
+}
+
+/* ═══════════ STATE ═══════════ */
+let cfg = { elecRate:7, waterRate:17, rentAir:4000, rentFan:3500, mid:100 };
+let payInfo = { bankName:'ธนาคารกสิกรไทย', bankAcc:'000-0-00000-0', promptpay:'0000000000', accName:'นาย เจ้าของ หอพัก' };
+let currentMonthKey = '';
+let availableMonths = [];
+const THMONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const fmt = n => Number(Math.round(n)).toLocaleString('th-TH');
+
+/* แปลง monthKey "09_2568" → "กันยายน 2568" */
+function monthLabel(key){
+  if(!key) return '—';
+  const [m,y]=key.split('_');
+  const idx=parseInt(m,10)-1;
+  return (THMONTHS[idx]||m)+' '+y;
+}
+
+/* rooms master: room / type(air|fan) / name / people / checkout */
+let rooms = [];
+/* bills: keyed by monthKey -> { room: {eBefore,eAfter,wBefore,wAfter} } */
+let bills = {};
+
+/* sort & search state per page */
+let sortState={home:{key:'room',dir:1},rooms:{key:'room',dir:1},bill:{key:'room',dir:1}};
+let searchState={home:{room:'',name:''},bill:{room:'',name:''}};
+let homePage=1;
+
+/* ═══════════ INIT (โหลดจาก Sheet) ═══════════ */
+async function init(){
+  setSyncStatus('loading','กำลังโหลดข้อมูลจาก Google Sheets...');
+  try {
+    const data = await apiGet({action:'all'});
+    applyData(data);
+    setSyncStatus('ok','เชื่อมต่อแล้ว · '+rooms.length+' ห้อง');
+    buildMonthSelectors();
+    renderAll();
+    updateQR();
+  } catch(err) {
+    setSyncStatus('error','โหลดไม่สำเร็จ: '+err.message);
+    toast(svgIcon('square-exclamation')+' โหลดข้อมูลไม่ได้ — ตรวจสอบ URL หรือสิทธิ์ Sheet','error');
+    console.error(err);
+  }
+}
+
+/* นำข้อมูลจาก API มาใส่ state */
+function applyData(data){
+  if(data.rooms) rooms = data.rooms.map(r=>({
+    room:String(r.room), type:r.type||'fan', name:r.name||'',
+    people:Number(r.people)||1, checkout:r.checkout||''
+  }));
+  if(data.config) cfg = {...cfg, ...data.config};
+  // sync payInfo จาก config
+  payInfo = {
+    bankName: cfg.bankName||payInfo.bankName,
+    bankAcc:  String(cfg.bankAcc||payInfo.bankAcc),
+    promptpay:String(cfg.promptpay||payInfo.promptpay),
+    accName:  cfg.accName||payInfo.accName
+  };
+  if(data.months) availableMonths = data.months.slice();
+  if(data.month) currentMonthKey = data.month;
+  if(data.bills){
+    bills[currentMonthKey] = {};
+    Object.entries(data.bills).forEach(([room,b])=>{
+      bills[currentMonthKey][room] = {
+        eBefore:Number(b.eBefore)||0, eAfter:Number(b.eAfter)||0,
+        wBefore:Number(b.wBefore)||0, wAfter:Number(b.wAfter)||0
+      };
+    });
+  }
+}
+
+/* โหลดข้อมูลเดือนใดเดือนหนึ่ง (เปลี่ยนเดือน) */
+async function loadMonth(monthKey){
+  setSyncStatus('loading','กำลังโหลด '+monthLabel(monthKey)+'...');
+  try {
+    const data = await apiGet({action:'all', month:monthKey});
+    currentMonthKey = monthKey;
+    bills[monthKey] = {};
+    if(data.bills){
+      Object.entries(data.bills).forEach(([room,b])=>{
+        bills[monthKey][room] = {
+          eBefore:Number(b.eBefore)||0, eAfter:Number(b.eAfter)||0,
+          wBefore:Number(b.wBefore)||0, wAfter:Number(b.wAfter)||0
+        };
+      });
+    }
+    setSyncStatus('ok','เชื่อมต่อแล้ว · '+monthLabel(monthKey));
+    buildMonthSelectors(); renderAll();
+  } catch(err) {
+    setSyncStatus('error','โหลดไม่สำเร็จ');
+    toast(svgIcon('square-exclamation')+' โหลดเดือนนี้ไม่ได้','error');
+  }
+}
+
+/* รีเฟรชข้อมูลทั้งหมด */
+async function refreshData(){ await init(); toast(svgIcon('checkbox')+' รีเฟรชข้อมูลแล้ว','success'); }
+
+function rentOf(type){ return type==='air'?cfg.rentAir:cfg.rentFan; }
+function isEmpty(rm){ return !rm.name || !rm.name.trim(); }
+
+/* compute a room's bill for current month */
+function calcRoom(rm){
+  const b=(bills[currentMonthKey]&&bills[currentMonthKey][rm.room])||{eBefore:0,eAfter:0,wBefore:0,wAfter:0};
+  const eU=Math.max(0,b.eAfter-b.eBefore), wU=Math.max(0,b.wAfter-b.wBefore);
+  const eM=eU*cfg.elecRate, wM=wU*cfg.waterRate;
+  const rent=isEmpty(rm)?0:rentOf(rm.type);
+  const midF=isEmpty(rm)?0:cfg.mid;
+  const total=eM+wM+rent+midF;
+  // map กลับเป็น eB/eA/wB/wA สำหรับ UI เดิม + เพิ่มตัวใหม่
+  return {eB:b.eBefore,eA:b.eAfter,wB:b.wBefore,wA:b.wAfter,eU,wU,eM,wM,rent,midF,total};
+}
+
+/* sync status indicator */
+function setSyncStatus(state, text){
+  const dot=el('gsDot'), txt=el('gsText');
+  if(dot){ dot.className='gs-dot '+(state==='ok'?'connected':state==='loading'?'loading':''); }
+  if(txt) txt.textContent=text;
+}
+
+/* ═══════════ MONTH ═══════════ */
+function buildMonthSelectors(){
+  const keys = availableMonths.length ? availableMonths : [currentMonthKey].filter(Boolean);
+  const opts = keys.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join('');
+  ['homeMonth','billMonth'].forEach(id=>{const e=el(id);if(e){e.innerHTML=opts;e.value=currentMonthKey;}});
+  el('sbMonth').textContent=monthLabel(currentMonthKey);
+  el('homeSubtitle').innerHTML=`ประจำงวด: ${monthLabel(currentMonthKey)} (ค่าส่วนกลาง <b>${fmt(cfg.mid)}</b> บาท)`;
+}
+function onMonthChange(v){
+  if(!v || v===currentMonthKey) return;
+  // ถ้ายังไม่มีในแคช โหลดจาก Sheet
+  if(bills[v]){ currentMonthKey=v; buildMonthSelectors(); renderAll(); }
+  else loadMonth(v);
+}
+
+/* ═══════════ RENDER ALL ═══════════ */
+function renderAll(){ renderHome(); renderRooms(); renderBill(); }
+
+/* ── filtered + sorted view ── */
+function getView(pageKey){
+  let arr=rooms.map(rm=>({rm,c:calcRoom(rm)}));
+  const s=searchState[pageKey];
+  if(s){
+    if(s.room) arr=arr.filter(x=>x.rm.room.toLowerCase().includes(s.room.toLowerCase()));
+    if(s.name) arr=arr.filter(x=>(x.rm.name||'').toLowerCase().includes(s.name.toLowerCase()));
+  }
+  const st=sortState[pageKey];
+  arr.sort((a,b)=>{
+    let va,vb;
+    switch(st.key){
+      case 'room': va=a.rm.room; vb=b.rm.room; return va.localeCompare(vb,'th',{numeric:true})*st.dir;
+      case 'name': va=a.rm.name||'ฮฮฮ'; vb=b.rm.name||'ฮฮฮ'; return va.localeCompare(vb,'th')*st.dir;
+      case 'type': va=a.rm.type; vb=b.rm.type; return va.localeCompare(vb)*st.dir;
+      default: va=a.c[st.key]||0; vb=b.c[st.key]||0; return (va-vb)*st.dir;
+    }
+  });
+  return arr;
+}
+
+/* ── HOME ── */
+function renderHome(){
+  const view=getView('home');
+  const pp=+el('homePerPage').value, start=(homePage-1)*pp, page=view.slice(start,start+pp);
+  const tb=el('homeBody');
+  if(!view.length){ tb.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="ic"><svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"m17.952 10.525c-.168-3.401-.743-5.453-.957-6.113-.53-.131-1.877-.433-3.741-.636-.22-.024-.397-.189-.438-.407-.207-1.122-.765-1.869-2.816-1.869s-2.61.747-2.816 1.869c-.04.217-.218.383-.438.407-1.864.204-3.211.505-3.741.636-.251.779-1.005 3.495-1.005 8.088 0 4.653.766 7.361 1.011 8.108.713.223 3.17.892 6.989.892 2.41 0 4.254-.267 5.376-.49.271-.057.534.121.588.393.054.271-.122.534-.393.588-1.167.232-3.08.51-5.572.51-4.761 0-7.443-.985-7.555-1.027-.133-.049-.238-.152-.29-.284-.047-.119-1.155-2.989-1.155-8.688s1.109-8.571 1.156-8.69c.057-.145.179-.255.329-.297.062-.018 1.491-.417 3.798-.692.427-1.582 1.618-2.322 3.717-2.322s3.291.74 3.717 2.322c2.308.275 3.736.674 3.798.692.15.042.272.152.329.297.037.091.89 2.295 1.106 6.664.014.276-.199.511-.475.524-.304.002-.511-.199-.524-.475zm-2.452 3.975h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm0-5h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm-5.613-1.883c-.211-.177-.526-.148-.705.062-.83.991-1.765 1.895-2.782 2.691-.541-.423-1.061-.878-1.55-1.358-.197-.194-.515-.19-.707.007-.193.197-.19.514.007.707.611.599 1.267 1.162 1.95 1.674.178.134.422.133.6 0 1.195-.897 2.289-1.933 3.249-3.079.177-.212.149-.527-.062-.705zm-.705 5.062c-.83.991-1.765 1.895-2.782 2.691-.54-.423-1.06-.878-1.55-1.358-.198-.191-.513-.19-.708.008-.193.197-.19.514.007.707.612.599 1.268 1.162 1.95 1.674.178.133.422.133.6 0 1.195-.897 2.289-1.934 3.249-3.079.177-.212.149-.527-.062-.705s-.526-.148-.705.062zm13.818 6.658c0-1.469-1.195-2.664-2.664-2.664-.828 0-1.429-.54-1.429-1.285 0-.766.661-1.388 1.473-1.388.626 0 1.186.375 1.391.932.096.26.384.393.643.296.259-.096.392-.383.296-.642-.279-.756-.932-1.307-1.712-1.503l.003-.58c0-.276-.222-.501-.498-.502h-.002c-.275 0-.499.223-.5.498l-.002.54c-1.181.179-2.091 1.16-2.091 2.35 0 1.303 1.044 2.285 2.43 2.285.917 0 1.664.746 1.664 1.664s-.746 1.663-1.664 1.663c-.875 0-1.604-.683-1.66-1.555-.018-.275-.267-.492-.531-.467-.276.018-.485.256-.467.531.082 1.28 1.072 2.294 2.315 2.457l-.002.531c0 .276.222.501.498.502h.002c.275 0 .499-.223.5-.498l.002-.594c1.15-.295 2.006-1.331 2.006-2.571z\"/></svg></div><p>ไม่พบข้อมูล</p></div></td></tr>`; el('homeFoot').innerHTML=''; el('homePager').innerHTML=''; updateHomeStats(view); return; }
+  tb.innerHTML=page.map(({rm,c})=>{
+    const nm=isEmpty(rm)?'<span style="color:var(--text-muted)">— ว่าง —</span>':rm.name;
+    return `<tr class="clickable" onclick="openDetail('${rm.room}')">
+      <td class="cell-room">${rm.room}</td><td class="cell-name">${nm}</td>
+      <td class="cell-meter">${fmt(c.eA)} - ${fmt(c.eB)}</td><td class="cell-unit">${fmt(c.eU)}</td><td class="cell-money">${fmt(c.eM)}</td>
+      <td class="cell-meter">${fmt(c.wA)} - ${fmt(c.wB)}</td><td class="cell-unit">${fmt(c.wU)}</td><td class="cell-money">${fmt(c.wM)}</td>
+      <td class="cell-mid">${c.midF?fmt(c.midF):'—'}</td>
+      <td class="cell-total">${fmt(c.total)} <span class="baht">บาท</span></td><td class="cell-arrow">›</td></tr>`;
+  }).join('');
+  let eu=0,em=0,wu=0,wm=0,tt=0;
+  view.forEach(({c})=>{eu+=c.eU;em+=c.eM;wu+=c.wU;wm+=c.wM;tt+=c.total;});
+  el('homeFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-total">${fmt(tt)} <span class="baht">บาท</span></td><td></td></tr>`;
+  homePager(view.length,pp);
+  updateHomeStats(view);
+  updateSortInd('home');
+}
+function updateHomeStats(view){
+  let e=0,w=0,t=0;
+  view.forEach(({c})=>{e+=c.eM;w+=c.wM;t+=c.total;});
+  el('hRooms').textContent=fmt(rooms.length);
+  el('hElec').textContent=fmt(e); el('hWater').textContent=fmt(w);
+  el('hTotal').innerHTML=`${fmt(t)} <span class="stat-unit">บาท</span>`;
+}
+function homePager(total,pp){
+  const tp=Math.ceil(total/pp),w=el('homePager');
+  if(tp<=1){w.innerHTML='';return;}
+  let h=`<button class="page-btn" onclick="homeGo(${homePage-1})" ${homePage===1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=tp;p++)h+=`<button class="page-btn ${p===homePage?'active':''}" onclick="homeGo(${p})">${p}</button>`;
+  h+=`<button class="page-btn" onclick="homeGo(${homePage+1})" ${homePage===tp?'disabled':''}>›</button>`;
+  w.innerHTML=h;
+}
+function homeGo(p){const pp=+el('homePerPage').value,tp=Math.ceil(getView('home').length/pp);if(p<1||p>tp)return;homePage=p;renderHome();}
+
+/* ── ROOMS ── */
+function renderRooms(){
+  const view=getView('rooms');
+  const tb=el('roomsBody');
+  tb.innerHTML=view.map(({rm})=>{
+    const ridx=rooms.indexOf(rm);
+    const badge=isEmpty(rm)?'<span class="badge badge-empty">ว่าง</span>':(rm.type==='air'?'<span class="badge badge-air"><svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10.047,7.955c0-1.305-.939-2.394-2.177-2.628v-1.267c.447-.212,1.146-.716,1.519-1.876,.084-.263-.06-.545-.323-.629-.264-.085-.544,.06-.629,.322-.3,.933-.85,1.229-1.065,1.312-.222-.085-.769-.383-1.067-1.312-.084-.263-.364-.407-.629-.322-.263,.084-.407,.366-.323,.629,.373,1.16,1.072,1.664,1.519,1.876v1.267c-.595,.113-1.121,.423-1.507,.861l-1.083-.64c.045-.493-.034-1.353-.84-2.264-.183-.207-.5-.227-.706-.044-.207,.184-.227,.499-.043,.706,.65,.735,.625,1.363,.587,1.592-.185,.148-.718,.473-1.668,.257-.267-.056-.536,.11-.597,.379-.061,.27,.109,.537,.378,.598,.299,.066,.573,.095,.822,.095,.737,0,1.255-.247,1.561-.455l1.079,.637c-.103,.284-.159,.589-.159,.908s.056,.624,.159,.908l-1.08,.638c-.409-.278-1.196-.624-2.382-.361-.27,.061-.439,.328-.378,.598,.061,.269,.324,.438,.597,.379,.953-.217,1.486,.11,1.667,.255,.04,.235,.062,.862-.585,1.594-.183,.206-.164,.522,.043,.705,.095,.085,.213,.126,.332,.126,.138,0,.275-.057,.375-.169,.807-.911,.885-1.771,.84-2.264l1.083-.64c.386,.437,.912,.748,1.507,.861v1.267c-.447,.212-1.146,.717-1.519,1.876-.084,.263,.06,.545,.323,.629,.051,.017,.103,.024,.153,.024,.211,0,.408-.135,.476-.347,.373-1.159,1.131-1.337,1.155-1.342,.238-.043,.412-.25,.412-.492v-1.616c1.238-.235,2.177-1.324,2.177-2.628Zm-2.677,1.676c-.925,0-1.677-.752-1.677-1.676s.752-1.676,1.677-1.676,1.677,.752,1.677,1.676-.752,1.676-1.677,1.676Z\"/><path d=\"M20.254,10.341c-.01-1.704-.041-5.009-.085-5.7-.128-1.994-1.826-3.557-3.865-3.557s-3.736,1.562-3.865,3.557c-.045,.701-.076,4-.085,5.701-1.847,.975-2.746,2.908-2.746,5.897,0,5.918,3.578,6.677,6.696,6.677s6.696-.759,6.696-6.677c0-2.99-.899-4.925-2.746-5.898Zm-3.95,11.575c-3.419,0-5.696-.966-5.696-5.677,0-2.746,.778-4.376,2.45-5.129,.178-.081,.293-.258,.294-.454,.009-2.089,.043-5.319,.084-5.951,.095-1.47,1.354-2.621,2.867-2.621s2.772,1.151,2.867,2.621c.042,.651,.076,3.936,.085,5.95,0,.196,.116,.373,.295,.454,1.671,.753,2.45,2.383,2.45,5.13,0,4.032-1.65,5.677-5.696,5.677Z\"/><path d=\"M16.804,13.768v-3.637c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v3.637c-1.155,.232-2.028,1.252-2.028,2.472,0,1.391,1.134,2.522,2.528,2.522s2.528-1.132,2.528-2.522c0-1.22-.873-2.24-2.028-2.472Zm-.5,3.994c-.843,0-1.528-.683-1.528-1.522s.686-1.521,1.528-1.521,1.528,.683,1.528,1.521-.686,1.522-1.528,1.522Z\"/></svg> แอร์ · 4,000</span>':'<span class="badge badge-fan"><svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"m22.98,10.346c-.721-.804-1.714-1.278-2.798-1.336-1.661-.081-4.16.444-5.969.983-.179-.197-.378-.371-.603-.515.164-.177.324-.352.494-.533,1.375-1.456,2.797-2.96,2.89-4.691C17.113,2.032,15.42.126,13.219.006c-1.067-.062-2.08.302-2.872,1.013-.804.721-1.278,1.715-1.336,2.798-.09,1.676.443,4.161.982,5.969-.197.179-.371.378-.515.603-.178-.164-.354-.325-.534-.495-1.455-1.374-2.96-2.795-4.69-2.888C2.054,6.892.127,8.581.006,10.781c-.059,1.06.302,2.08,1.014,2.873.721.804,1.714,1.278,2.798,1.336.125.006.255.01.389.01,1.655,0,3.907-.494,5.58-.993.178.197.378.371.603.515-.164.177-.324.352-.494.533-1.375,1.456-2.796,2.96-2.889,4.691-.119,2.222,1.574,4.127,3.775,4.247.074.004.147.006.221.006.979,0,1.914-.358,2.651-1.02.804-.721,1.278-1.714,1.336-2.798.09-1.676-.443-4.161-.982-5.969.197-.179.371-.378.515-.603.178.164.354.325.534.495,1.455,1.374,2.96,2.795,4.69,2.888.073.004.146.006.22.006,2.125,0,3.91-1.654,4.027-3.781.059-1.06-.302-2.08-1.014-2.873Zm-10.98,3.654c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Zm-1.991-10.129c.044-.817.401-1.565,1.006-2.108.595-.533,1.36-.801,2.149-.759,1.651.09,2.921,1.524,2.832,3.195-.073,1.365-1.367,2.734-2.618,4.059-.258.274-.51.543-.751.81-.202-.043-.412-.068-.627-.068-.4,0-.78.082-1.129.224-.468-1.64-.941-3.886-.863-5.353ZM3.87,13.991c-.816-.043-1.564-.4-2.106-1.005-.533-.594-.803-1.358-.76-2.15.091-1.651,1.554-2.924,3.196-2.831,1.364.073,2.732,1.365,4.057,2.616.274.259.544.511.811.753-.043.203-.068.412-.068.627,0,.4.082.78.224,1.129-1.64.469-3.883.943-5.354.863Zm10.121,6.138c-.044.816-.401,1.565-1.006,2.107-.593.533-1.359.801-2.149.759-1.651-.09-2.921-1.524-2.832-3.195.073-1.365,1.367-2.734,2.618-4.058.258-.275.51-.544.751-.81.202.043.412.068.627.068.4,0,.78-.082,1.129-.224.468,1.64.941,3.886.863,5.353Zm5.809-4.134c-1.364-.073-2.732-1.365-4.057-2.616-.274-.259-.544-.511-.811-.753.043-.202.068-.412.068-.627,0-.4-.082-.78-.224-1.129,1.64-.469,3.886-.938,5.354-.862.816.043,1.564.4,2.106,1.005.533.594.803,1.358.76,2.15-.091,1.651-1.53,2.932-3.196,2.831Z\"/></svg> พัดลม · 3,500</span>');
+    const status=isEmpty(rm)?'<span class="badge badge-empty">ว่าง</span>':'<span class="badge badge-fan">มีผู้เช่า</span>';
+    const nm=isEmpty(rm)?'<span style="color:var(--text-muted)">— ว่าง —</span>':rm.name;
+    const co=rm.checkout?`<span style="color:var(--c-warn)">${rm.checkout}</span>`:'<span style="color:var(--text-muted)">—</span>';
+    return `<tr><td class="cell-room">${rm.room}</td><td>${badge}</td><td class="cell-name">${nm}</td>
+      <td>${isEmpty(rm)?'—':rm.people+' คน'}</td><td>${co}</td><td>${status}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openRoomModal(${ridx})"><svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M22.94,1.061c-1.368-1.367-3.76-1.365-5.124,0L1.611,17.265c-1.039,1.04-1.611,2.421-1.611,3.89v2.346c0,.276,.224,.5,.5,.5H2.846c1.47,0,2.851-.572,3.889-1.611L22.86,6.265c.579-.581,.953-1.262,1.08-1.972,.216-1.202-.148-2.381-1-3.232ZM6.028,21.682c-.85,.851-1.979,1.318-3.182,1.318H1v-1.846c0-1.202,.468-2.332,1.318-3.183L15.292,4.999l3.709,3.709L6.028,21.682ZM22.956,4.116c-.115,.642-.5,1.138-.803,1.441l-2.444,2.444-3.709-3.709,2.525-2.525c.986-.988,2.718-.99,3.709,0,.617,.617,.88,1.473,.723,2.349Z\"/></svg> แก้ไข</button></td></tr>`;
+  }).join('');
+  updateSortInd('rooms');
+}
+
+/* ── BILL (editable) ── */
+function renderBill(){
+  const view=getView('bill');
+  const tb=el('billBody');
+  el('billSubtitle').textContent=monthLabel(currentMonthKey)+' — กรอกเลขมิเตอร์ หลัง/ก่อน ระบบคำนวณให้';
+  if(!bills[currentMonthKey])bills[currentMonthKey]={};
+  tb.innerHTML=view.map(({rm,c})=>{
+    const r=rm.room;
+    return `<tr>
+      <td class="cell-room">${r}</td>
+      <td><input class="cell-name-input" value="${rm.name||''}" placeholder="ห้องว่าง" onchange="editName('${r}',this.value)"></td>
+      <td><input class="cell-input" type="number" inputmode="numeric" value="${c.eA||''}" placeholder="หลัง" oninput="editMeter('${r}','eAfter',this.value)"></td>
+      <td><input class="cell-input" type="number" inputmode="numeric" value="${c.eB||''}" placeholder="ก่อน" oninput="editMeter('${r}','eBefore',this.value)"></td>
+      <td><input class="cell-input locked" id="bu-e-${r}" value="${fmt(c.eU)}" readonly></td>
+      <td><input class="cell-input locked" id="bm-e-${r}" value="${fmt(c.eM)}" readonly></td>
+      <td><input class="cell-input" type="number" inputmode="numeric" value="${c.wA||''}" placeholder="หลัง" oninput="editMeter('${r}','wAfter',this.value)"></td>
+      <td><input class="cell-input" type="number" inputmode="numeric" value="${c.wB||''}" placeholder="ก่อน" oninput="editMeter('${r}','wBefore',this.value)"></td>
+      <td><input class="cell-input locked" id="bu-w-${r}" value="${fmt(c.wU)}" readonly></td>
+      <td><input class="cell-input locked" id="bm-w-${r}" value="${fmt(c.wM)}" readonly></td>
+      <td class="cell-mid">${c.midF?fmt(c.midF):'—'}</td>
+      <td class="cell-total" id="bt-${r}">${fmt(c.total)} <span class="baht">฿</span></td></tr>`;
+  }).join('');
+  let eu=0,em=0,wu=0,wm=0,tt=0;
+  view.forEach(({c})=>{eu+=c.eU;em+=c.eM;wu+=c.wU;wm+=c.wM;tt+=c.total;});
+  el('billFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-total">${fmt(tt)}</td></tr>`;
+  updateSortInd('bill');
+}
+function editMeter(room,field,val){
+  if(!bills[currentMonthKey])bills[currentMonthKey]={};
+  if(!bills[currentMonthKey][room])bills[currentMonthKey][room]={eBefore:0,eAfter:0,wBefore:0,wAfter:0};
+  bills[currentMonthKey][room][field]=+val||0;
+  const rm=rooms.find(x=>x.room===room), c=calcRoom(rm);
+  el('bu-e-'+room).value=fmt(c.eU); el('bm-e-'+room).value=fmt(c.eM);
+  el('bu-w-'+room).value=fmt(c.wU); el('bm-w-'+room).value=fmt(c.wM);
+  el('bt-'+room).innerHTML=`${fmt(c.total)} <span class="baht">฿</span>`;
+  refreshBillFoot();
+}
+function refreshBillFoot(){
+  const view=getView('bill'); let eu=0,em=0,wu=0,wm=0,tt=0;
+  view.forEach(({c})=>{eu+=c.eU;em+=c.eM;wu+=c.wU;wm+=c.wM;tt+=c.total;});
+  el('billFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-total">${fmt(tt)}</td></tr>`;
+}
+function editName(room,val){ const rm=rooms.find(x=>x.room===room); if(rm){rm.name=val;} }
+
+/* บันทึกบิล → เขียนกลับ Sheet */
+async function saveBill(){
+  const btn=event&&event.target?event.target.closest('button'):null;
+  if(btn){ btn.disabled=true; }
+  setSyncStatus('loading','กำลังบันทึกบิล...');
+  try {
+    // เตรียม payload เฉพาะห้องในเดือนนี้
+    const monthBills = bills[currentMonthKey]||{};
+    await apiPost({action:'saveBill', month:currentMonthKey, bills:monthBills});
+    // บันทึกชื่อห้องที่แก้ไปด้วย (ชื่อเก็บใน rooms master)
+    setSyncStatus('ok','บันทึกแล้ว · '+monthLabel(currentMonthKey));
+    toast(svgIcon('checkbox')+' บันทึกบิลลง Google Sheets แล้ว','success');
+    renderAll();
+  } catch(err) {
+    setSyncStatus('error','บันทึกไม่สำเร็จ');
+    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+  }
+  if(btn){ btn.disabled=false; }
+}
+
+/* ── SORT / SEARCH ── */
+function sortBy(pageKey,key){
+  const st=sortState[pageKey];
+  if(st.key===key)st.dir*=-1; else{st.key=key;st.dir=1;}
+  if(pageKey==='home')homePage=1;
+  if(pageKey==='home')renderHome(); else if(pageKey==='rooms')renderRooms(); else renderBill();
+}
+function updateSortInd(pageKey){
+  document.querySelectorAll(`[id^="si-${pageKey}-"]`).forEach(e=>e.textContent='');
+  const st=sortState[pageKey], e=el(`si-${pageKey}-${st.key}`);
+  if(e)e.textContent=st.dir>0?'▲':'▼';
+}
+function setSearch(pageKey,field,val){
+  searchState[pageKey][field]=val;
+  if(pageKey==='home'){homePage=1;renderHome();} else renderBill();
+}
+
+/* ── DETAIL MODAL ── */
+let detailRoom=null;
+function openDetail(room){
+  detailRoom=room;
+  const rm=rooms.find(x=>x.room===room), c=calcRoom(rm);
+  el('dRoom').textContent=room;
+  el('dTenant').textContent=isEmpty(rm)?'— ห้องว่าง —':rm.name;
+  el('dEB').textContent=fmt(c.eB); el('dEA').textContent=fmt(c.eA);
+  el('dEU').textContent=`${fmt(c.eU)} หน่วย`; el('dEM').textContent=`${fmt(c.eM)} บาท`;
+  el('dWB').textContent=fmt(c.wB); el('dWA').textContent=fmt(c.wA);
+  el('dWU').textContent=`${fmt(c.wU)} หน่วย`; el('dWM').textContent=`${fmt(c.wM)} บาท`;
+  el('dMid').textContent=`${fmt(c.midF)} บาท`;
+  el('dRentLabel').textContent=`ค่าเช่าห้อง (${rm.type==='air'?'แอร์':'พัดลม'})`;
+  el('dRent').textContent=`${fmt(c.rent)} บาท`;
+  el('dTotal').textContent=`${fmt(c.total)} บาท`;
+  el('detailModal').classList.add('open');
+}
+function goBillFromDetail(){ closeModal('detailModal'); goPage('bill'); toast('<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M5,15c0-1.103,.897-2,2-2h6.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-.551,0-1,.449-1,1v2c0,.551,.449,1,1,1h7.5c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5H7c-1.103,0-2-.897-2-2v-2Zm.5-5h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm0-4h4c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H5.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm11.5,17.5c0,.276-.224,.5-.5,.5H5.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C1,2.019,3.019,0,5.5,0h5.515c1.735,0,3.368,.676,4.597,1.904l3.484,3.485c.824,.824,1.413,1.857,1.702,2.987,.038,.15,.005,.309-.09,.431s-.24,.193-.395,.193h-5.813c-1.379,0-2.5-1.122-2.5-2.5V1.087c-.322-.058-.651-.087-.985-.087H5.5c-1.93,0-3.5,1.57-3.5,3.5v15c0,1.93,1.57,3.5,3.5,3.5h11c.276,0,.5,.224,.5,.5ZM13,6.5c0,.827,.673,1.5,1.5,1.5h5.129c-.275-.712-.697-1.361-1.24-1.904l-3.484-3.485c-.552-.551-1.199-.97-1.904-1.243V6.5Zm8.79,10.281l-3.422-.55c-.793-.127-1.368-.803-1.368-1.605,0-.896,.729-1.626,1.626-1.626h2.8c.623,0,1.204,.335,1.517,.875,.139,.24,.445,.32,.683,.183,.239-.138,.321-.444,.183-.683-.49-.848-1.402-1.375-2.382-1.375h-.926v-1.5c0-.276-.224-.5-.5-.5s-.5,.224-.5,.5v1.5h-.874c-1.448,0-2.626,1.178-2.626,2.626,0,1.296,.93,2.387,2.21,2.593l3.422,.55c.793,.127,1.368,.803,1.368,1.605,0,.896-.729,1.626-1.626,1.626h-2.8c-.623,0-1.204-.335-1.517-.875-.139-.24-.448-.321-.683-.183-.239,.138-.321,.444-.183,.683,.49,.848,1.402,1.375,2.382,1.375h.926v1.5c0,.276,.224,.5,.5,.5s.5-.224,.5-.5v-1.5h.874c1.448,0,2.626-1.178,2.626-2.626,0-1.296-.93-2.387-2.21-2.593Z\"/></svg> ไปหน้าบิลรายเดือน','info'); }
+
+/* ── ROOM MODAL ── */
+let rmType='air';
+function openRoomModal(idx=null){
+  if(idx!==null&&rooms[idx]){
+    const rm=rooms[idx];
+    el('roomModalTitle').textContent=`แก้ไขห้อง ${rm.room}`;
+    el('rm_idx').value=idx; el('rm_room').value=rm.room;
+    el('rm_name').value=rm.name||''; el('rm_people').value=rm.people||1;
+    el('rm_checkout').value=rm.checkout||''; selRoomType(rm.type);
+  }else{
+    el('roomModalTitle').textContent='เพิ่มห้อง'; el('rm_idx').value='';
+    el('rm_room').value=''; el('rm_name').value=''; el('rm_people').value=1;
+    el('rm_checkout').value=''; selRoomType('air');
+  }
+  el('roomModal').classList.add('open');
+}
+function selRoomType(t){
+  rmType=t;
+  document.querySelectorAll('#rm_typeSeg .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===t));
+}
+el2('rm_checkout',e=>e.addEventListener('change',()=>{el('rm_checkoutHint').style.display=el('rm_checkout').value?'block':'none';}));
+async function saveRoom(){
+  const room=el('rm_room').value.trim();
+  if(!room){toast(svgIcon('square-exclamation')+' กรุณากรอกเลขห้อง','error');return;}
+  const obj={room,type:rmType,name:el('rm_name').value.trim(),people:+el('rm_people').value||1,checkout:el('rm_checkout').value};
+  const idx=el('rm_idx').value;
+  // เช็คซ้ำเฉพาะตอนเพิ่มใหม่
+  if(idx===''&&rooms.find(r=>r.room===room)){toast(svgIcon('square-exclamation')+' มีห้องนี้แล้ว','error');return;}
+  const btn=event&&event.target?event.target.closest('button'):null;
+  if(btn) btn.disabled=true;
+  setSyncStatus('loading','กำลังบันทึกห้อง...');
+  try {
+    await apiPost({action:'saveRoom', room:obj});
+    // อัปเดต local
+    if(idx!==''){ rooms[+idx]=obj; }
+    else { rooms.push(obj); }
+    setSyncStatus('ok','บันทึกแล้ว');
+    toast(svgIcon('checkbox')+(idx!==''?' แก้ไขห้องแล้ว':' เพิ่มห้องแล้ว'),'success');
+    closeModal('roomModal'); renderAll();
+  } catch(err) {
+    setSyncStatus('error','บันทึกไม่สำเร็จ');
+    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+  }
+  if(btn) btn.disabled=false;
+}
+
+/* ── EXPORT ── */
+let exMode='all';
+function openExport(){
+  exMode='all'; selExport('all');
+  const sel=el('exRoomSel');
+  sel.innerHTML=rooms.map(r=>`<option value="${r.room}">${r.room} — ${r.name||'ว่าง'}</option>`).join('');
+  el('exportModal').classList.add('open');
+}
+function selExport(m){
+  exMode=m;
+  el('exOptAll').classList.toggle('selected',m==='all');
+  el('exOptEach').classList.toggle('selected',m==='each');
+}
+function dateStamp(){const[m,y]=currentMonthKey.split('_');const mi=THMONTHS.indexOf(m)+1;return `${String(mi).padStart(2,'0')}-${y}`;}
+function csvCell(s){return `"${String(s).replace(/"/g,'""')}"`;}
+function doExport(){
+  const stamp=dateStamp();
+  if(exMode==='all'){
+    const H=['เลขห้อง','ชื่อ','ประเภท','ไฟหลัง','ไฟก่อน','หน่วยไฟ','ค่าไฟ','น้ำหลัง','น้ำก่อน','หน่วยน้ำ','ค่าน้ำ','ค่าส่วนกลาง','ค่าห้อง','รวมสิทธิ์'];
+    const rows=rooms.map(rm=>{const c=calcRoom(rm);return [rm.room,rm.name||'ว่าง',rm.type==='air'?'แอร์':'พัดลม',c.eA,c.eB,c.eU,c.eM,c.wA,c.wB,c.wU,c.wM,c.midF,c.rent,c.total].map(csvCell).join(',');});
+    download(`RentHub_ทั้งหมด_${stamp}.csv`,'\uFEFF'+[H.join(','),...rows].join('\n'));
+    toast('<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z\"/></svg> Export ไฟล์รวมสำเร็จ','success');
+  }else{
+    let sel=[...el('exRoomSel').selectedOptions].map(o=>o.value);
+    if(!sel.length)sel=rooms.map(r=>r.room);
+    sel.forEach((room,i)=>{
+      const rm=rooms.find(x=>x.room===room), c=calcRoom(rm);
+      const lines=[
+        `บิลค่าเช่าห้อง ${room} — ${rm.name||'ห้องว่าง'}`,
+        `รอบบิล,${currentMonthKey.replace('_',' ')}`,
+        ``,`รายการ,หน่วย,จำนวนเงิน`,
+        `ค่าไฟฟ้า (${c.eA}-${c.eB}),${c.eU} หน่วย,${c.eM} บาท`,
+        `ค่าน้ำประปา (${c.wA}-${c.wB}),${c.wU} หน่วย,${c.wM} บาท`,
+        `ค่าเช่าห้อง (${rm.type==='air'?'แอร์':'พัดลม'}),,${c.rent} บาท`,
+        `ค่าส่วนกลาง,,${c.midF} บาท`,
+        `รวมทั้งสิ้น,,${c.total} บาท`,
+        ``,`── ช่องทางชำระเงิน ──`,
+        `${payInfo.bankName},${payInfo.bankAcc}`,
+        `พร้อมเพย์,${payInfo.promptpay}`,
+        `ชื่อบัญชี,${payInfo.accName}`,
+        `กรุณาส่งสลิปยืนยันหลังโอนเงิน`
+      ];
+      setTimeout(()=>download(`${room}_${stamp}.csv`,'\uFEFF'+lines.map(l=>l).join('\n')),i*250);
+    });
+    toast(`<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z\"/></svg> กำลังดาวน์โหลด ${sel.length} ไฟล์`,'success');
+  }
+  closeModal('exportModal');
+}
+function download(name,content){
+  const blob=new Blob([content],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+}
+
+/* ── PAY ── */
+function updateQR(){
+  const pp=payInfo.promptpay.replace(/[^0-9]/g,'');
+  el('payBankName').textContent=payInfo.bankName;
+  el('payBankAcc').textContent=payInfo.bankAcc;
+  el('payPromptpay').textContent=payInfo.promptpay;
+  el('payAccName').textContent=payInfo.accName;
+  el('qrImg').src=`https://promptpay.io/${pp||'0000000000'}.png`;
+}
+function openPayEdit(){
+  el('pe_bankName').value=payInfo.bankName; el('pe_bankAcc').value=payInfo.bankAcc;
+  el('pe_promptpay').value=payInfo.promptpay; el('pe_accName').value=payInfo.accName;
+  el('payEditModal').classList.add('open');
+}
+async function savePayInfo(){
+  payInfo.bankName=el('pe_bankName').value; payInfo.bankAcc=el('pe_bankAcc').value;
+  payInfo.promptpay=el('pe_promptpay').value; payInfo.accName=el('pe_accName').value;
+  const btn=event&&event.target?event.target.closest('button'):null;
+  if(btn) btn.disabled=true;
+  setSyncStatus('loading','กำลังบันทึก...');
+  try {
+    await apiPost({action:'saveConfig', config:{
+      bankName:payInfo.bankName, bankAcc:payInfo.bankAcc,
+      promptpay:payInfo.promptpay, accName:payInfo.accName
+    }});
+    cfg.bankName=payInfo.bankName; cfg.bankAcc=payInfo.bankAcc;
+    cfg.promptpay=payInfo.promptpay; cfg.accName=payInfo.accName;
+    updateQR(); closeModal('payEditModal');
+    setSyncStatus('ok','บันทึกแล้ว');
+    toast(svgIcon('checkbox')+' บันทึกข้อมูลชำระเงินแล้ว','success');
+  } catch(err) {
+    setSyncStatus('error','บันทึกไม่สำเร็จ');
+    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+  }
+  if(btn) btn.disabled=false;
+}
+function copyText(id){
+  const t=el(id).textContent;
+  navigator.clipboard?.writeText(t).then(()=>toast('<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M20.975,3.768l-2.742-2.742c-.651-.651-1.553-1.025-2.475-1.025h-4.758c-2.206,0-4,1.794-4,4h-1c-2.206,0-4,1.794-4,4v12c0,2.206,1.794,4,4,4h7c2.206,0,4-1.794,4-4h1c2.206,0,4-1.794,4-4V6.243c0-.935-.364-1.813-1.025-2.475Zm-.707,.707c.158,.158,.282,.337,.391,.525h-2.658c-.552,0-1-.449-1-1V1.344c.189,.109,.37,.233,.525,.388l2.742,2.742Zm-7.268,18.525H6c-1.654,0-3-1.346-3-3V8c0-1.654,1.346-3,3-3h1v11c0,2.206,1.794,4,4,4h5c0,1.654-1.346,3-3,3Zm8-7c0,1.654-1.346,3-3,3h-7c-1.654,0-3-1.346-3-3V4c0-1.654,1.346-3,3-3h4.758c.082,0,.161,.016,.242,.024v2.976c0,1.103,.897,2,2,2h2.976c.008,.081,.024,.16,.024,.243v9.757Z\"/></svg> คัดลอกแล้ว: '+t,'info')).catch(()=>toast('<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M20.975,3.768l-2.742-2.742c-.651-.651-1.553-1.025-2.475-1.025h-4.758c-2.206,0-4,1.794-4,4h-1c-2.206,0-4,1.794-4,4v12c0,2.206,1.794,4,4,4h7c2.206,0,4-1.794,4-4h1c2.206,0,4-1.794,4-4V6.243c0-.935-.364-1.813-1.025-2.475Zm-.707,.707c.158,.158,.282,.337,.391,.525h-2.658c-.552,0-1-.449-1-1V1.344c.189,.109,.37,.233,.525,.388l2.742,2.742Zm-7.268,18.525H6c-1.654,0-3-1.346-3-3V8c0-1.654,1.346-3,3-3h1v11c0,2.206,1.794,4,4,4h5c0,1.654-1.346,3-3,3Zm8-7c0,1.654-1.346,3-3,3h-7c-1.654,0-3-1.346-3-3V4c0-1.654,1.346-3,3-3h4.758c.082,0,.161,.016,.242,.024v2.976c0,1.103,.897,2,2,2h2.976c.008,.081,.024,.16,.024,.243v9.757Z\"/></svg> '+t,'info'));
+}
+
+/* ── SETTINGS ── */
+async function saveSettings(){
+  cfg.elecRate=+el('s_elec').value||7; cfg.waterRate=+el('s_water').value||17;
+  cfg.rentAir=+el('s_air').value||4000; cfg.rentFan=+el('s_fan').value||3500; cfg.mid=+el('s_mid').value||100;
+  setSyncStatus('loading','กำลังบันทึกอัตรา...');
+  try {
+    await apiPost({action:'saveConfig', config:{
+      elecRate:cfg.elecRate, waterRate:cfg.waterRate,
+      rentAir:cfg.rentAir, rentFan:cfg.rentFan, mid:cfg.mid
+    }});
+    renderAll(); buildMonthSelectors();
+    setSyncStatus('ok','บันทึกแล้ว');
+    toast(svgIcon('checkbox')+' บันทึกอัตราลง Sheet แล้ว','success');
+  } catch(err) {
+    setSyncStatus('error','บันทึกไม่สำเร็จ');
+    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+  }
+}
+
+/* ── NAV / PAGE ── */
+function goPage(p){
+  document.querySelectorAll('.page').forEach(s=>s.classList.remove('active'));
+  el('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item[data-page]').forEach(n=>n.classList.toggle('active',n.dataset.page===p));
+  document.querySelectorAll('.mnav li[data-page]').forEach(n=>n.classList.toggle('active',n.dataset.page===p));
+  const titles={home:'หน้าหลัก',rooms:'ห้องพัก',bill:'บิลรายเดือน',pay:'รับชำระ',settings:'ตั้งค่า'};
+  el('mTitle').textContent=titles[p]||'';
+  // sync ค่าใน settings inputs จาก cfg ปัจจุบัน
+  if(p==='settings'){
+    setVal('s_elec',cfg.elecRate); setVal('s_water',cfg.waterRate);
+    setVal('s_air',cfg.rentAir); setVal('s_fan',cfg.rentFan); setVal('s_mid',cfg.mid);
+  }
+  if(window.innerWidth<=900){el('sidebar').classList.remove('open');el('sbBackdrop').classList.remove('show');}
+  window.scrollTo(0,0);
+}
+
+/* ── THEME ── */
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);syncTheme();}
+function syncTheme(){
+  const t=document.documentElement.getAttribute('data-theme');
+  ['ttDark','ttDarkM'].forEach(id=>el(id)&&el(id).classList.toggle('active',t==='dark'));
+  ['ttLight','ttLightM'].forEach(id=>el(id)&&el(id).classList.toggle('active',t==='light'));
+}
+
+/* ── HELPERS ── */
+function el(id){return document.getElementById(id);}
+function el2(id,fn){const e=document.getElementById(id);if(e)fn(e);}
+function closeModal(id){el(id).classList.remove('open');}
+function closeOverlay(e,id){if(e.target.id===id)closeModal(id);}
+function toggleSidebar(){el('sidebar').classList.toggle('open');el('sbBackdrop').classList.toggle('show');}
+function toast(msg,type=''){const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=msg;el('toastWrap').appendChild(t);setTimeout(()=>t.remove(),3200);}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
