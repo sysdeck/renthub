@@ -1264,71 +1264,96 @@ function _dlBlob(blob,name){ const a=document.createElement('a'); a.href=URL.cre
 /* วาดบิล 1 ห้องลง canvas แล้วคืน canvas (รอ QR โหลดเสร็จก่อน) */
 async function drawRoomBill(rm){
   const c=calcRoom(rm);
-  const S=2, W=720, H=1060;
+  /* W=520 × S=2 = 1040px จริง → fit iPhone/Android ไม่ scroll */
+  const S=2, W=520, H=1000;
   const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S;
   const x=cv.getContext('2d'); x.scale(S,S);
-  const F='-apple-system,"Segoe UI","Sarabun","Noto Sans Thai",sans-serif';
+  const F='"Noto Sans Thai","Sarabun","Prompt",-apple-system,sans-serif';
   const AC='#0d9488', INK='#1f2937', SUB='#6b7280', LINE='#e5e7eb';
+  const ML=28, MR=W-28;   // left/right margin
   x.textBaseline='alphabetic';
+
+  /* ── พื้นหลัง ── */
   x.fillStyle='#fff'; x.fillRect(0,0,W,H);
-  // header
-  x.fillStyle=AC; x.fillRect(0,0,W,96);
+
+  /* ── Header ── */
+  x.fillStyle=AC; x.fillRect(0,0,W,88);
   x.fillStyle='#fff';
-  x.font='700 26px '+F; x.fillText('ใบแจ้งค่าเช่าห้องพัก',40,48);
-  x.font='400 15px '+F; x.fillText('RentHub · รอบบิล '+monthLabel(currentMonthKey),40,76);
-  // room + name
-  let y=150;
-  x.fillStyle=INK; x.font='700 22px '+F; x.fillText('ห้อง '+rm.room,40,y);
-  x.font='400 16px '+F; x.fillStyle=SUB; x.fillText('· '+(rm.name||'ห้องว่าง')+' · '+(rm.type==='air'?'ห้องแอร์':'ห้องพัดลม'),140,y);
-  // table header
-  y=186;
-  x.fillStyle='#f9fafb'; x.fillRect(40,y,W-80,38);
-  x.fillStyle=SUB; x.font='600 13px '+F;
-  x.fillText('รายการ',56,y+24); x.fillText('หน่วย',410,y+24);
-  x.textAlign='right'; x.fillText('จำนวนเงิน (บาท)',W-56,y+24); x.textAlign='left';
-  // rows
+  x.font='700 22px '+F; x.fillText('ใบแจ้งค่าเช่าห้องพัก',ML,42);
+  x.font='400 13px '+F; x.fillText('RentHub · รอบบิล '+monthLabel(currentMonthKey),ML,68);
+
+  /* ── ชื่อห้อง ── */
+  let y=130;
+  x.fillStyle=INK; x.font='700 20px '+F; x.fillText('ห้อง '+rm.room,ML,y);
+  x.font='400 14px '+F; x.fillStyle=SUB;
+  x.fillText('· '+(rm.name||'ห้องว่าง')+' · '+(rm.type==='air'?'ห้องแอร์':'ห้องพัดลม'),ML+72,y);
+
+  /* ── Table header ── */
+  y=168;
+  x.fillStyle='#f9fafb'; x.fillRect(ML,y,W-ML*2,34);
+  x.fillStyle=SUB; x.font='600 12px '+F;
+  x.fillText('รายการ',ML+12,y+22);
+  x.textAlign='center'; x.fillText('หน่วย',ML+190,y+22);
+  x.textAlign='right'; x.fillText('จำนวนเงิน',MR-8,y+22); x.textAlign='left';
+
+  /* ── Rows ── */
   const rows=[
     ['ค่าไฟฟ้า ('+c.eB+' → '+c.eA+')', c.eU+' หน่วย', c.eM],
     ['ค่าน้ำประปา ('+c.wB+' → '+c.wA+')', c.wU+' หน่วย', c.wM],
-    ['ค่าเช่าห้อง ('+(rm.type==='air'?'แอร์':'พัดลม')+')', '-', c.rent],
-    ['ค่าส่วนกลาง', '-', c.midF]
+    ['ค่าเช่าห้อง ('+(rm.type==='air'?'แอร์':'พัดลม')+')', '—', c.rent],
+    ['ค่าส่วนกลาง','—', c.midF]
   ];
-  y+=38; x.font='400 15px '+F;
+  y+=34;
   rows.forEach(r=>{
-    x.fillStyle=INK; x.fillText(r[0],56,y+28);
-    x.fillStyle=SUB; x.fillText(r[1],410,y+28);
-    x.fillStyle=INK; x.textAlign='right'; x.fillText(fmt(r[2]),W-56,y+28); x.textAlign='left';
-    x.strokeStyle=LINE; x.lineWidth=1; x.beginPath(); x.moveTo(40,y+44); x.lineTo(W-40,y+44); x.stroke();
-    y+=44;
+    x.fillStyle=INK; x.font='400 14px '+F; x.fillText(r[0],ML+12,y+24);
+    x.fillStyle=SUB; x.textAlign='center'; x.fillText(r[1],ML+190,y+24); x.textAlign='left';
+    x.fillStyle=INK; x.textAlign='right'; x.fillText(fmt(r[2]),MR-8,y+24); x.textAlign='left';
+    x.strokeStyle=LINE; x.lineWidth=1; x.beginPath(); x.moveTo(ML,y+38); x.lineTo(MR,y+38); x.stroke();
+    y+=40;
   });
-  // total
-  y+=12;
-  x.fillStyle='#ecfdf5'; x.fillRect(40,y,W-80,58);
-  x.fillStyle=AC; x.font='700 18px '+F; x.fillText('รวมทั้งสิ้น',56,y+37);
-  x.textAlign='right'; x.font='700 26px '+F; x.fillText(fmt(c.total)+' บาท',W-56,y+39); x.textAlign='left';
-  y+=92;
-  // pay box
-  x.fillStyle=INK; x.font='700 16px '+F; x.fillText('ช่องทางชำระเงิน',40,y); y+=16;
-  x.strokeStyle=LINE; x.lineWidth=1; x.strokeRect(40,y,W-80,256);
-  let ly=y+36; x.font='400 15px '+F;
-  [['ธนาคาร',payInfo.bankName],['เลขบัญชี',payInfo.bankAcc],['พร้อมเพย์',payInfo.promptpay],['ชื่อบัญชี',payInfo.accName]].forEach(p=>{
-    x.fillStyle=SUB; x.font='400 14px '+F; x.fillText(p[0],60,ly);
-    x.fillStyle=INK; x.font='600 15px '+F; x.fillText(p[1]||'-',170,ly);
-    ly+=36;
+
+  /* ── Total ── */
+  y+=10;
+  x.fillStyle='#ecfdf5'; x.fillRect(ML,y,W-ML*2,52);
+  x.fillStyle=AC; x.font='700 15px '+F; x.fillText('รวมทั้งสิ้น',ML+12,y+34);
+  x.textAlign='right'; x.font='700 22px '+F;
+  x.fillText(fmt(c.total)+' บาท', MR-12, y+34);   // MR-12 = safe margin
+  x.textAlign='left'; y+=74;
+
+  /* ── ช่องทางชำระเงิน ── */
+  x.fillStyle=INK; x.font='700 14px '+F; x.fillText('ช่องทางชำระเงิน',ML,y); y+=14;
+  x.strokeStyle=LINE; x.lineWidth=1;
+  const BOXH=230; x.strokeRect(ML,y,W-ML*2,BOXH);
+
+  /* text info */
+  let ly=y+30; const COL1=ML+14, COL2=ML+90;
+  [['ธนาคาร',payInfo.bankName],['เลขบัญชี',payInfo.bankAcc],
+   ['พร้อมเพย์',payInfo.promptpay],['ชื่อบัญชี',payInfo.accName]].forEach(p=>{
+    x.fillStyle=SUB; x.font='400 12px '+F; x.fillText(p[0],COL1,ly);
+    x.fillStyle=INK; x.font='600 13px '+F; x.fillText(p[1]||'—',COL2,ly);
+    ly+=38;
   });
-  // QR (right)
+
+  /* QR code (right of pay box) */
   const qr=await _getQR();
   if(qr){
-    const qs=180, qx=W-60-qs, qy=y+34;
-    x.drawImage(qr,qx,qy,qs,qs);
-    x.fillStyle=SUB; x.font='400 12px '+F; x.textAlign='center';
-    x.fillText('สแกนเพื่อโอนเงิน',qx+qs/2,qy+qs+18); x.textAlign='left';
+    const QS=140, QX=MR-QS-4, QY=y+12;
+    x.drawImage(qr,QX,QY,QS,QS);
+    x.fillStyle=SUB; x.font='400 11px '+F; x.textAlign='center';
+    x.fillText('สแกนเพื่อโอนเงิน',QX+QS/2,QY+QS+15); x.textAlign='left';
   }
-  y+=256+34;
-  x.fillStyle=SUB; x.font='400 13px '+F;
-  x.fillText('* กรุณาส่งสลิปยืนยันหลังโอนเงินทุกครั้ง',40,y); y+=22;
-  x.fillText('ออกบิลเมื่อ '+new Date().toLocaleDateString('th-TH'),40,y);
-  return cv;
+  y+=BOXH+22;
+
+  /* ── Footer ── */
+  x.fillStyle=SUB; x.font='400 12px '+F;
+  x.fillText('* กรุณาส่งสลิปยืนยันหลังโอนเงินทุกครั้ง',ML,y); y+=18;
+  x.fillText('ออกบิลเมื่อ '+new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}),ML,y);
+
+  /* ── ครอปให้พอดีกับเนื้อหาจริง ── */
+  const FINAL_H=Math.min(y+40, H);
+  const out=document.createElement('canvas'); out.width=W*S; out.height=FINAL_H*S;
+  out.getContext('2d').drawImage(cv,0,0);
+  return out;
 }
 
 /* export บิลเป็นรูป PNG ทีละห้อง */
