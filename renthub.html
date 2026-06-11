@@ -118,8 +118,8 @@ body{font-family:var(--font);background:var(--bg-base);color:var(--text-primary)
 .stat-water .stat-icon{background:var(--icon-water-bg);color:var(--c-water)}
 .stat-mid .stat-icon{background:var(--icon-mid-bg);color:var(--text-secondary)}
 .stat-total{background:var(--total-card-bg);border-color:var(--total-card-bd);box-shadow:var(--total-glow)}
-.stat-total .stat-icon{background:var(--accent-soft);color:var(--accent)}
-.stat-total .stat-number{color:var(--accent)}
+.stat-total .stat-icon{background:rgba(61,220,151,.14);color:var(--c-success)}
+.stat-total .stat-number{color:var(--c-success)}
 
 /* ── TABLE ── */
 .table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow)}
@@ -150,14 +150,16 @@ tbody td{padding:14px 12px;text-align:center;vertical-align:middle}
 .cell-unit{font-weight:600;font-variant-numeric:tabular-nums}
 .cell-money{font-weight:400;font-variant-numeric:tabular-nums}
 .cell-mid{color:var(--text-secondary)}
-.cell-total{font-weight:700;font-size:15px;color:var(--accent);white-space:nowrap}
+.cell-total{font-weight:700;font-size:15px;color:var(--c-success);white-space:nowrap}
 .cell-total .baht{font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px}
 .cell-kebab{color:var(--text-muted);font-size:16px;width:36px}
 .cell-arrow{color:var(--text-muted);font-size:14px;width:30px}
 tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top:2px solid var(--border);text-align:center;font-variant-numeric:tabular-nums}
 .foot-label{font-size:14px}
 .foot-total{color:var(--accent);font-size:16px}
+.foot-grand{color:var(--c-success);font-size:16px;font-weight:700}
 .foot-total .baht{font-size:11px;font-weight:400;color:var(--text-muted)}
+.foot-grand .baht{font-size:11px;font-weight:400;color:var(--text-muted)}
 
 /* inline editable cells (bill page) */
 .cell-input{width:72px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:8px;padding:7px 6px;font-family:var(--font);font-size:13px;color:var(--text-primary);text-align:center;outline:none;transition:border-color .15s;font-variant-numeric:tabular-nums}
@@ -260,11 +262,24 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
 .qr-note{font-size:12px;color:var(--text-secondary);line-height:1.6}
 
 /* ── TOAST ── */
-.toast-wrap{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
-.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-btn);padding:11px 19px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow);pointer-events:auto;animation:toastIn .2s var(--ease),toastOut .3s var(--ease) 2.7s forwards}
-.toast.success{border-color:var(--c-success);color:var(--c-success)}
-.toast.error{border-color:var(--c-danger);color:var(--c-danger)}
-.toast.info{border-color:var(--accent);color:var(--accent)}
+.toast-wrap{position:fixed;top:20px;right:20px;left:auto;transform:none;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1.5px solid var(--border);border-left-width:4px;border-radius:12px;padding:14px 20px;font-size:14px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.28);pointer-events:auto;min-width:240px;max-width:380px;animation:toastIn .28s cubic-bezier(.22,1,.36,1),toastOut .35s ease 3.2s forwards}
+.toast.success{border-color:var(--c-success);background:linear-gradient(135deg,rgba(34,197,94,.14),var(--bg-card))}
+.toast.success .toast-ic{background:var(--c-success)}
+.toast.error{border-color:var(--c-danger);background:linear-gradient(135deg,rgba(239,68,68,.14),var(--bg-card))}
+.toast.error .toast-ic{background:var(--c-danger)}
+.toast.info{border-color:var(--accent);background:linear-gradient(135deg,rgba(79,142,247,.14),var(--bg-card))}
+.toast.info .toast-ic{background:var(--accent)}
+.toast.loading{border-color:var(--text-sub)}
+.toast.loading .toast-ic{background:var(--text-sub)}
+.toast-ic{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.toast-ic .svgic{width:15px;height:15px;fill:#fff}
+.toast-msg{flex:1;color:var(--text-main);line-height:1.35}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(40px) scale(.95)}}
+/* ปุ่มสถานะ success ชั่วขณะ */
+.btn.btn-done{background:var(--c-success)!important;border-color:var(--c-success)!important;color:#fff!important}
+.btn.btn-saving{opacity:.7;pointer-events:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toastOut{to{opacity:0;transform:translateY(-8px)}}
 
@@ -654,11 +669,14 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
     <button class="sheet-close" onclick="closeModal('exportModal')">✕</button>
     <h3 class="sheet-title"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z"/></svg> Export ข้อมูล</h3>
     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px">เลือกรูปแบบการดึงข้อมูล</p>
-    <div class="export-opt selected" id="exOptAll" onclick="selExport('all')">
-      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m17.952 10.525c-.168-3.401-.743-5.453-.957-6.113-.53-.131-1.877-.433-3.741-.636-.22-.024-.397-.189-.438-.407-.207-1.122-.765-1.869-2.816-1.869s-2.61.747-2.816 1.869c-.04.217-.218.383-.438.407-1.864.204-3.211.505-3.741.636-.251.779-1.005 3.495-1.005 8.088 0 4.653.766 7.361 1.011 8.108.713.223 3.17.892 6.989.892 2.41 0 4.254-.267 5.376-.49.271-.057.534.121.588.393.054.271-.122.534-.393.588-1.167.232-3.08.51-5.572.51-4.761 0-7.443-.985-7.555-1.027-.133-.049-.238-.152-.29-.284-.047-.119-1.155-2.989-1.155-8.688s1.109-8.571 1.156-8.69c.057-.145.179-.255.329-.297.062-.018 1.491-.417 3.798-.692.427-1.582 1.618-2.322 3.717-2.322s3.291.74 3.717 2.322c2.308.275 3.736.674 3.798.692.15.042.272.152.329.297.037.091.89 2.295 1.106 6.664.014.276-.199.511-.475.524-.304.002-.511-.199-.524-.475zm-2.452 3.975h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm0-5h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm-5.613-1.883c-.211-.177-.526-.148-.705.062-.83.991-1.765 1.895-2.782 2.691-.541-.423-1.061-.878-1.55-1.358-.197-.194-.515-.19-.707.007-.193.197-.19.514.007.707.611.599 1.267 1.162 1.95 1.674.178.134.422.133.6 0 1.195-.897 2.289-1.933 3.249-3.079.177-.212.149-.527-.062-.705zm-.705 5.062c-.83.991-1.765 1.895-2.782 2.691-.54-.423-1.06-.878-1.55-1.358-.198-.191-.513-.19-.708.008-.193.197-.19.514.007.707.612.599 1.268 1.162 1.95 1.674.178.133.422.133.6 0 1.195-.897 2.289-1.934 3.249-3.079.177-.212.149-.527-.062-.705s-.526-.148-.705.062zm13.818 6.658c0-1.469-1.195-2.664-2.664-2.664-.828 0-1.429-.54-1.429-1.285 0-.766.661-1.388 1.473-1.388.626 0 1.186.375 1.391.932.096.26.384.393.643.296.259-.096.392-.383.296-.642-.279-.756-.932-1.307-1.712-1.503l.003-.58c0-.276-.222-.501-.498-.502h-.002c-.275 0-.499.223-.5.498l-.002.54c-1.181.179-2.091 1.16-2.091 2.35 0 1.303 1.044 2.285 2.43 2.285.917 0 1.664.746 1.664 1.664s-.746 1.663-1.664 1.663c-.875 0-1.604-.683-1.66-1.555-.018-.275-.267-.492-.531-.467-.276.018-.485.256-.467.531.082 1.28 1.072 2.294 2.315 2.457l-.002.531c0 .276.222.501.498.502h.002c.275 0 .499-.223.5-.498l.002-.594c1.15-.295 2.006-1.331 2.006-2.571z"/></svg></div><div class="eo-text"><b>ทั้งหมด (1 ไฟล์)</b><span>ตารางรวมทุกห้อง — เลขมิเตอร์ + ค่าใช้จ่าย</span></div>
+    <div class="export-opt" id="exOptAll" onclick="selExport('all')">
+      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m17.952 10.525c-.168-3.401-.743-5.453-.957-6.113-.53-.131-1.877-.433-3.741-.636-.22-.024-.397-.189-.438-.407-.207-1.122-.765-1.869-2.816-1.869s-2.61.747-2.816 1.869c-.04.217-.218.383-.438.407-1.864.204-3.211.505-3.741.636-.251.779-1.005 3.495-1.005 8.088 0 4.653.766 7.361 1.011 8.108.713.223 3.17.892 6.989.892 2.41 0 4.254-.267 5.376-.49.271-.057.534.121.588.393.054.271-.122.534-.393.588-1.167.232-3.08.51-5.572.51-4.761 0-7.443-.985-7.555-1.027-.133-.049-.238-.152-.29-.284-.047-.119-1.155-2.989-1.155-8.688s1.109-8.571 1.156-8.69c.057-.145.179-.255.329-.297.062-.018 1.491-.417 3.798-.692.427-1.582 1.618-2.322 3.717-2.322s3.291.74 3.717 2.322c2.308.275 3.736.674 3.798.692.15.042.272.152.329.297.037.091.89 2.295 1.106 6.664.014.276-.199.511-.475.524-.304.002-.511-.199-.524-.475zm-2.452 3.975h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm0-5h-4c-.276 0-.5.224-.5.5s.224.5.5.5h4c.276 0 .5-.224.5-.5s-.224-.5-.5-.5zm-5.613-1.883c-.211-.177-.526-.148-.705.062-.83.991-1.765 1.895-2.782 2.691-.541-.423-1.061-.878-1.55-1.358-.197-.194-.515-.19-.707.007-.193.197-.19.514.007.707.611.599 1.267 1.162 1.95 1.674.178.134.422.133.6 0 1.195-.897 2.289-1.933 3.249-3.079.177-.212.149-.527-.062-.705zm-.705 5.062c-.83.991-1.765 1.895-2.782 2.691-.54-.423-1.06-.878-1.55-1.358-.198-.191-.513-.19-.708.008-.193.197-.19.514.007.707.612.599 1.268 1.162 1.95 1.674.178.133.422.133.6 0 1.195-.897 2.289-1.934 3.249-3.079.177-.212.149-.527-.062-.705s-.526-.148-.705.062zm13.818 6.658c0-1.469-1.195-2.664-2.664-2.664-.828 0-1.429-.54-1.429-1.285 0-.766.661-1.388 1.473-1.388.626 0 1.186.375 1.391.932.096.26.384.393.643.296.259-.096.392-.383.296-.642-.279-.756-.932-1.307-1.712-1.503l.003-.58c0-.276-.222-.501-.498-.502h-.002c-.275 0-.499.223-.5.498l-.002.54c-1.181.179-2.091 1.16-2.091 2.35 0 1.303 1.044 2.285 2.43 2.285.917 0 1.664.746 1.664 1.664s-.746 1.663-1.664 1.663c-.875 0-1.604-.683-1.66-1.555-.018-.275-.267-.492-.531-.467-.276.018-.485.256-.467.531.082 1.28 1.072 2.294 2.315 2.457l-.002.531c0 .276.222.501.498.502h.002c.275 0 .499-.223.5-.498l.002-.594c1.15-.295 2.006-1.331 2.006-2.571z"/></svg></div><div class="eo-text"><b>ตารางรวม (CSV)</b><span>ทุกห้อง 1 ไฟล์ — สำหรับลงบัญชี / Excel</span></div>
     </div>
-    <div class="export-opt" id="exOptEach" onclick="selExport('each')">
-      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m17.5 11c-3.584 0-6.5 2.916-6.5 6.5s2.916 6.5 6.5 6.5 6.5-2.916 6.5-6.5-2.916-6.5-6.5-6.5zm0 12c-3.033 0-5.5-2.468-5.5-5.5s2.467-5.5 5.5-5.5 5.5 2.468 5.5 5.5-2.467 5.5-5.5 5.5zm3.35-6.857c.192.198.187.515-.012.707l-2.703 2.614c-.36.355-.835.533-1.311.533s-.949-.177-1.312-.531l-1.364-1.347c-.197-.193-.199-.51-.005-.707.194-.195.511-.198.707-.004l1.363 1.345c.337.329.886.327 1.223-.004l2.706-2.618c.199-.191.516-.187.707.012zm-10.85-5.537c0 1.32-1.074 2.395-2.395 2.395h-.605v.5c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-.5h-.83c-.884 0-1.693-.484-2.111-1.264-.13-.243-.039-.547.205-.677.244-.133.546-.039.677.204.243.454.714.736 1.229.736h2.435c.769 0 1.395-.626 1.395-1.395 0-.685-.49-1.264-1.166-1.376l-2.833-.473c-1.159-.193-2.001-1.187-2.001-2.362 0-1.32 1.074-2.395 2.395-2.395h.605v-.5c0-.276.224-.5.5-.5s.5.224.5.5v.5h.605c.884 0 1.693.484 2.111 1.264.131.243.04.546-.204.677-.243.131-.546.039-.677-.204-.244-.454-.715-.736-1.23-.736h-2.21c-.769 0-1.395.626-1.395 1.395 0 .685.49 1.264 1.166 1.376l2.833.473c1.159.193 2.001 1.187 2.001 2.362zm-.589 10.52c.158.227.102.538-.125.695l-2.833 1.971c-.172.119-.4.119-.571 0l-2.539-1.767-2.546 1.873c-.152.112-.354.129-.522.044-.169-.086-.275-.258-.275-.447v-18.995c0-2.481 2.019-4.5 4.5-4.5h9c2.481 0 4.5 2.019 4.5 4.5v4c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-4c0-1.93-1.57-3.5-3.5-3.5h-9c-1.93 0-3.5 1.57-3.5 3.5v18.006l2.038-1.499c.172-.128.406-.13.582-.008l2.547 1.772 2.548-1.771c.227-.157.539-.102.696.125z"/></svg></div><div class="eo-text"><b>รายห้อง (หลายไฟล์)</b><span>แยกไฟล์ต่อห้อง: เลขห้อง_วันที่ + ข้อมูลโอนเงิน</span></div>
+    <div class="export-opt" id="exOptImg" onclick="selExport('img')">
+      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19,2H5C3.346,2,2,3.346,2,5v14c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V5c0-1.654-1.346-3-3-3Zm-14,2h14c.552,0,1,.448,1,1v9.586l-3.293-3.293c-.391-.391-1.024-.391-1.414,0l-3.293,3.293-1.293-1.293c-.391-.391-1.024-.391-1.414,0l-3.586,3.586v-11.879c0-.552,.448-1,1-1Zm-1,15v-.293l4.293-4.293,1.293,1.293c.391,.391,1.024,.391,1.414,0l3.293-3.293,3.707,3.707v2.879c0,.552-.448,1-1,1H5c-.552,0-1-.448-1-1Zm5-9c.828,0,1.5-.672,1.5-1.5s-.672-1.5-1.5-1.5-1.5,.672-1.5,1.5,.672,1.5,1.5,1.5Z"/></svg></div><div class="eo-text"><b>บิลรายห้อง (รูป PNG)</b><span>ใบแจ้งหนี้พร้อม QR + บัญชี · ส่งผู้เช่าได้เลย</span></div>
+    </div>
+    <div class="export-opt" id="exOptPdf" onclick="selExport('pdf')">
+      <div class="eo-icon"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.5,0H5.5C3.019,0,1,2.019,1,4.5v15c0,2.481,2.019,4.5,4.5,4.5h13c2.481,0,4.5-2.019,4.5-4.5V8.5c0-.133-.053-.26-.146-.354L14.854,.146c-.094-.094-.221-.146-.354-.146Zm.5,1.707l6.293,6.293h-4.793c-.827,0-1.5-.673-1.5-1.5V1.707Zm3.5,21.293H5.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h8.5V6.5c0,1.378,1.122,2.5,2.5,2.5h5.5v10.5c0,1.93-1.57,3.5-3.5,3.5ZM8,14.5c0,.827-.673,1.5-1.5,1.5h-1v1.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-4.5c0-.276,.224-.5,.5-.5h1.5c.827,0,1.5,.673,1.5,1.5v.5Zm-1,0v-.5c0-.276-.224-.5-.5-.5h-1v1.5h1c.276,0,.5-.224,.5-.5Zm6.5,.5v1c0,1.103-.897,2-2,2h-1c-.276,0-.5-.224-.5-.5v-4.5c0-.276,.224-.5,.5-.5h1c1.103,0,2,.897,2,2Zm-1,0c0-.551-.449-1-1-1h-.5v3h.5c.551,0,1-.449,1-1v-1Zm6-1.5c0,.276-.224,.5-.5,.5h-1.5v1h1c.276,0,.5,.224,.5,.5s-.224,.5-.5,.5h-1v1.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-4.5c0-.276,.224-.5,.5-.5h2c.276,0,.5,.224,.5,.5Z"/></svg></div><div class="eo-text"><b>บิลรายห้อง (PDF)</b><span>ใบแจ้งหนี้ไฟล์ PDF พร้อม QR + บัญชี</span></div>
     </div>
     <div class="fg" style="margin-top:8px"><label class="fg-label">เลือกห้อง (สำหรับรายห้อง)</label>
       <select class="fg-input" id="exRoomSel" multiple size="5" style="height:auto"></select>
@@ -677,6 +695,15 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
     <div class="fg"><label class="fg-label">เลขบัญชี</label><input class="fg-input" id="pe_bankAcc" value="000-0-00000-0"></div>
     <div class="fg"><label class="fg-label">พร้อมเพย์</label><input class="fg-input" id="pe_promptpay" value="000-000-0000"></div>
     <div class="fg"><label class="fg-label">ชื่อบัญชี</label><input class="fg-input" id="pe_accName" value="นาย เจ้าของ หอพัก"></div>
+    <div class="fg">
+      <label class="fg-label">QR ของคุณเอง (ไม่บังคับ — ไม่ใส่ ระบบจะสร้าง QR พร้อมเพย์จากเบอร์ให้อัตโนมัติ)</label>
+      <input type="file" accept="image/*" id="pe_qrFile" onchange="handleQRUpload(event)" style="display:none">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button type="button" class="btn" onclick="el('pe_qrFile').click()" style="border:1.5px solid var(--border);background:var(--bg-card2)"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19,2H5C3.346,2,2,3.346,2,5v14c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V5c0-1.654-1.346-3-3-3Zm-14,2h14c.552,0,1,.448,1,1v9.586l-3.293-3.293c-.391-.391-1.024-.391-1.414,0l-3.293,3.293-1.293-1.293c-.391-.391-1.024-.391-1.414,0l-3.586,3.586v-11.879c0-.552,.448-1,1-1Zm-1,15v-.293l4.293-4.293,1.293,1.293c.391,.391,1.024,.391,1.414,0l3.293-3.293,3.707,3.707v2.879c0,.552-.448,1-1,1H5c-.552,0-1-.448-1-1Zm5-9c.828,0,1.5-.672,1.5-1.5s-.672-1.5-1.5-1.5-1.5,.672-1.5,1.5,.672,1.5,1.5,1.5Z"/></svg> เลือกรูป QR</button>
+        <img id="pe_qrPreview" src="" alt="QR" style="display:none;width:60px;height:60px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border)">
+        <button type="button" class="btn" id="pe_qrClear" onclick="clearCustomQR()" style="display:none;border:1.5px solid #e5484d;color:#e5484d;background:transparent">ลบ QR</button>
+      </div>
+    </div>
     <button class="btn btn-add" style="width:100%;justify-content:center" onclick="savePayInfo()"><svg class="svgic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-2.142-12.348c.192,.197,.188,.515-.011,.706l-9.792,9.5c-.412,.412-.966,.642-1.556,.642s-1.144-.229-1.561-.646L3.158,12.864c-.202-.188-.212-.505-.022-.706,.188-.203,.507-.212,.706-.022l4.793,4.5c.479,.477,1.264,.466,1.719,.011L20.152,7.142c.199-.193,.517-.188,.706,.011Z"/></svg> บันทึก</button>
   </div>
 </div>
@@ -713,14 +740,21 @@ function jsonp(params){
 /* GET: ดึงข้อมูล */
 async function apiGet(params){ return jsonp(params); }
 
-/* WRITE: เขียนข้อมูล — ส่ง payload ผ่าน GET (JSONP) เลี่ยง CORS preflight */
+/* WRITE: เขียนข้อมูล — ส่ง payload ผ่าน GET (JSONP) เลี่ยง CORS preflight
+   เพิ่ม retry อัตโนมัติ 1 ครั้ง เผื่อสัญญาณวูบระหว่างยิง */
 async function apiPost(payload){
-  return jsonp({ payload: JSON.stringify(payload) });
+  const bodyStr = JSON.stringify(payload);
+  try {
+    return await jsonp({ payload: bodyStr });
+  } catch(e1){
+    await new Promise(r=>setTimeout(r,600));   // รอ 0.6 วิ แล้วลองใหม่
+    return await jsonp({ payload: bodyStr });
+  }
 }
 
 /* ═══════════ STATE ═══════════ */
 let cfg = { elecRate:7, waterRate:17, rentAir:4000, rentFan:3500, mid:100 };
-let payInfo = { bankName:'ธนาคารกสิกรไทย', bankAcc:'000-0-00000-0', promptpay:'0000000000', accName:'นาย เจ้าของ หอพัก' };
+let payInfo = { bankName:'ธนาคารกสิกรไทย', bankAcc:'000-0-00000-0', promptpay:'0000000000', accName:'นาย เจ้าของ หอพัก', customQR:'' };
 let currentMonthKey = '';
 let availableMonths = [];
 const THMONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -762,18 +796,30 @@ async function init(){
 }
 
 /* นำข้อมูลจาก API มาใส่ state */
+/* เติม 0 หน้าเบอร์พร้อมเพย์อัตโนมัติ (กันกรณี Sheet ตัด 0 ทิ้ง)
+   - เบอร์มือถือไทย 10 หลัก ขึ้นต้น 0 (เช่น 0909866680)
+   - ถ้าได้มา 9 หลัก (909866680) = 0 หาย → เติมกลับ
+   - เลขบัตรประชาชน 13 หลัก ปล่อยตามเดิม */
+function normPhone(v){
+  let s = String(v==null?'':v).replace(/[^0-9]/g,'');
+  if(s.length===9) s='0'+s;            // เบอร์มือถือ 0 หาย → เติม
+  else if(s.length===12 && s[0]!=='0') s='0'+s; // เผื่อกรณีพิเศษ
+  return s;
+}
+
 function applyData(data){
   if(data.rooms) rooms = data.rooms.map(r=>({
     room:String(r.room), type:r.type||'fan', name:r.name||'',
     people:Number(r.people)||1, checkout:r.checkout||''
   }));
   if(data.config) cfg = {...cfg, ...data.config};
-  // sync payInfo จาก config
+  // sync payInfo จาก config + เติม 0 เบอร์พร้อมเพย์ให้ถูก
   payInfo = {
     bankName: cfg.bankName||payInfo.bankName,
     bankAcc:  String(cfg.bankAcc||payInfo.bankAcc),
-    promptpay:String(cfg.promptpay||payInfo.promptpay),
-    accName:  cfg.accName||payInfo.accName
+    promptpay:normPhone(cfg.promptpay||payInfo.promptpay),
+    accName:  cfg.accName||payInfo.accName,
+    customQR: loadCustomQR()
   };
   if(data.months) availableMonths = data.months.slice();
   if(data.month) currentMonthKey = data.month;
@@ -895,7 +941,7 @@ function renderHome(){
   }).join('');
   let eu=0,em=0,wu=0,wm=0,tt=0;
   view.forEach(({c})=>{eu+=c.eU;em+=c.eM;wu+=c.wU;wm+=c.wM;tt+=c.total;});
-  el('homeFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-total">${fmt(tt)} <span class="baht">บาท</span></td><td></td></tr>`;
+  el('homeFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-grand">${fmt(tt)} <span class="baht">บาท</span></td><td></td></tr>`;
   homePager(view.length,pp);
   updateHomeStats(view);
   updateSortInd('home');
@@ -958,7 +1004,7 @@ function renderBill(){
   }).join('');
   let eu=0,em=0,wu=0,wm=0,tt=0;
   view.forEach(({c})=>{eu+=c.eU;em+=c.eM;wu+=c.wU;wm+=c.wM;tt+=c.total;});
-  el('billFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-total">${fmt(tt)}</td></tr>`;
+  el('billFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-grand">${fmt(tt)}</td></tr>`;
   updateSortInd('bill');
 }
 function editMeter(room,field,val){
@@ -974,28 +1020,35 @@ function editMeter(room,field,val){
 function refreshBillFoot(){
   const view=getView('bill'); let eu=0,em=0,wu=0,wm=0,tt=0;
   view.forEach(({c})=>{eu+=c.eU;em+=c.eM;wu+=c.wU;wm+=c.wM;tt+=c.total;});
-  el('billFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-total">${fmt(tt)}</td></tr>`;
+  el('billFoot').innerHTML=`<tr><td class="foot-label" colspan="2">รวมทั้งสิ้น</td><td></td><td></td><td>${fmt(eu)}</td><td class="foot-total">${fmt(em)}</td><td></td><td></td><td>${fmt(wu)}</td><td>${fmt(wm)}</td><td>—</td><td class="foot-grand">${fmt(tt)}</td></tr>`;
 }
 function editName(room,val){ const rm=rooms.find(x=>x.room===room); if(rm){rm.name=val;} }
 
 /* บันทึกบิล → เขียนกลับ Sheet */
 async function saveBill(){
   const btn=event&&event.target?event.target.closest('button'):null;
-  if(btn){ btn.disabled=true; }
+  btnState(btn,'saving');
   setSyncStatus('loading','กำลังบันทึกบิล...');
   try {
-    // เตรียม payload เฉพาะห้องในเดือนนี้
     const monthBills = bills[currentMonthKey]||{};
-    await apiPost({action:'saveBill', month:currentMonthKey, bills:monthBills});
-    // บันทึกชื่อห้องที่แก้ไปด้วย (ชื่อเก็บใน rooms master)
+    const roomKeys = Object.keys(monthBills);
+    // ── ส่งทีละ 6 ห้อง: กัน URL ยาวเกินลิมิต JSONP (สาเหตุหลักที่บันทึกหลายห้องแล้วล้ม) ──
+    const CHUNK = 6;
+    for(let i=0;i<roomKeys.length;i+=CHUNK){
+      const part = {};
+      roomKeys.slice(i,i+CHUNK).forEach(k=>part[k]=monthBills[k]);
+      setSyncStatus('loading',`กำลังบันทึกบิล... (${Math.min(i+CHUNK,roomKeys.length)}/${roomKeys.length})`);
+      await apiPost({action:'saveBill', month:currentMonthKey, bills:part});
+    }
     setSyncStatus('ok','บันทึกแล้ว · '+monthLabel(currentMonthKey));
-    toast(svgIcon('checkbox')+' บันทึกบิลลง Google Sheets แล้ว','success');
+    btnState(btn,'done');
+    toast('บันทึกบิลลง Google Sheets แล้ว','success');
     renderAll();
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+    btnState(btn,'reset');
+    toast('บันทึกไม่ได้: '+err.message,'error');
   }
-  if(btn){ btn.disabled=false; }
 }
 
 /* ── SORT / SEARCH ── */
@@ -1057,33 +1110,31 @@ function selRoomType(t){
 el2('rm_checkout',e=>e.addEventListener('change',()=>{el('rm_checkoutHint').style.display=el('rm_checkout').value?'block':'none';}));
 async function saveRoom(){
   const room=el('rm_room').value.trim();
-  if(!room){toast(svgIcon('square-exclamation')+' กรุณากรอกเลขห้อง','error');return;}
+  if(!room){toast('กรุณากรอกเลขห้อง','error');return;}
   const obj={room,type:rmType,name:el('rm_name').value.trim(),people:+el('rm_people').value||1,checkout:el('rm_checkout').value};
   const idx=el('rm_idx').value;
-  // เช็คซ้ำเฉพาะตอนเพิ่มใหม่
-  if(idx===''&&rooms.find(r=>r.room===room)){toast(svgIcon('square-exclamation')+' มีห้องนี้แล้ว','error');return;}
+  if(idx===''&&rooms.find(r=>r.room===room)){toast('มีห้องนี้แล้ว','error');return;}
   const btn=event&&event.target?event.target.closest('button'):null;
-  if(btn) btn.disabled=true;
+  btnState(btn,'saving');
   setSyncStatus('loading','กำลังบันทึกห้อง...');
   try {
     await apiPost({action:'saveRoom', room:obj});
-    // อัปเดต local
     if(idx!==''){ rooms[+idx]=obj; }
     else { rooms.push(obj); }
     setSyncStatus('ok','บันทึกแล้ว');
-    toast(svgIcon('checkbox')+(idx!==''?' แก้ไขห้องแล้ว':' เพิ่มห้องแล้ว'),'success');
+    toast(idx!==''?'แก้ไขห้องแล้ว':'เพิ่มห้องแล้ว','success');
     closeModal('roomModal'); renderAll();
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+    btnState(btn,'reset');
+    toast('บันทึกไม่ได้: '+err.message,'error');
   }
-  if(btn) btn.disabled=false;
 }
 
 /* ── EXPORT ── */
 let exMode='all';
 function openExport(){
-  exMode='all'; selExport('all');
+  exMode='img'; selExport('img');
   const sel=el('exRoomSel');
   sel.innerHTML=rooms.map(r=>`<option value="${r.room}">${r.room} — ${r.name||'ว่าง'}</option>`).join('');
   el('exportModal').classList.add('open');
@@ -1091,9 +1142,15 @@ function openExport(){
 function selExport(m){
   exMode=m;
   el('exOptAll').classList.toggle('selected',m==='all');
-  el('exOptEach').classList.toggle('selected',m==='each');
+  el('exOptImg').classList.toggle('selected',m==='img');
+  el('exOptPdf').classList.toggle('selected',m==='pdf');
 }
-function dateStamp(){const[m,y]=currentMonthKey.split('_');const mi=THMONTHS.indexOf(m)+1;return `${String(mi).padStart(2,'0')}-${y}`;}
+function dateStamp(){
+  if(!currentMonthKey) return 'nomonth';
+  const parts=currentMonthKey.split('_');
+  if(parts.length===2) return parts[0]+'-'+parts[1];  // MM_YYYY → MM-YYYY
+  return currentMonthKey.replace('_','-');
+}
 function csvCell(s){return `"${String(s).replace(/"/g,'""')}"`;}
 function doExport(){
   const stamp=dateStamp();
@@ -1104,27 +1161,11 @@ function doExport(){
     toast('<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z\"/></svg> Export ไฟล์รวมสำเร็จ','success');
   }else{
     let sel=[...el('exRoomSel').selectedOptions].map(o=>o.value);
-    if(!sel.length)sel=rooms.map(r=>r.room);
-    sel.forEach((room,i)=>{
-      const rm=rooms.find(x=>x.room===room), c=calcRoom(rm);
-      const lines=[
-        `บิลค่าเช่าห้อง ${room} — ${rm.name||'ห้องว่าง'}`,
-        `รอบบิล,${currentMonthKey.replace('_',' ')}`,
-        ``,`รายการ,หน่วย,จำนวนเงิน`,
-        `ค่าไฟฟ้า (${c.eA}-${c.eB}),${c.eU} หน่วย,${c.eM} บาท`,
-        `ค่าน้ำประปา (${c.wA}-${c.wB}),${c.wU} หน่วย,${c.wM} บาท`,
-        `ค่าเช่าห้อง (${rm.type==='air'?'แอร์':'พัดลม'}),,${c.rent} บาท`,
-        `ค่าส่วนกลาง,,${c.midF} บาท`,
-        `รวมทั้งสิ้น,,${c.total} บาท`,
-        ``,`── ช่องทางชำระเงิน ──`,
-        `${payInfo.bankName},${payInfo.bankAcc}`,
-        `พร้อมเพย์,${payInfo.promptpay}`,
-        `ชื่อบัญชี,${payInfo.accName}`,
-        `กรุณาส่งสลิปยืนยันหลังโอนเงิน`
-      ];
-      setTimeout(()=>download(`${room}_${stamp}.csv`,'\uFEFF'+lines.map(l=>l).join('\n')),i*250);
-    });
-    toast(`<svg class=\"svgic\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18.83,21.77c-.21-.18-.52-.16-.71,.04-.66,.75-1.62,1.19-2.62,1.19H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h5.51c.33,0,.66,.03,.99,.09V6.5c0,1.38,1.12,2.5,2.5,2.5h5.41c.06,.32,.09,.65,.09,.99v.51c0,.28,.22,.5,.5,.5s.5-.22,.5-.5v-.51c0-1.74-.68-3.37-1.9-4.6l-3.48-3.48c-1.23-1.23-2.86-1.9-4.6-1.9H4.5C2.02,0,0,2.02,0,4.5v15c0,2.48,2.02,4.5,4.5,4.5H15.5c1.29,0,2.52-.56,3.38-1.52,.18-.21,.16-.52-.04-.71Zm-1.44-15.67c.55,.55,.97,1.2,1.24,1.9h-5.13c-.83,0-1.5-.67-1.5-1.5V1.37c.71,.27,1.35,.69,1.9,1.24l3.48,3.48Zm6.61,10.41c0,.5-.19,1-.58,1.38l-2.57,2.52c-.1,.09-.22,.14-.35,.14s-.26-.05-.36-.15c-.19-.2-.19-.51,0-.71l2.57-2.51c.06-.06,.1-.12,.14-.18H13.5c-.28,0-.5-.22-.5-.5s.22-.5,.5-.5h9.36c-.04-.07-.09-.13-.15-.19l-2.57-2.51c-.2-.19-.2-.51,0-.71,.19-.2,.51-.2,.71,0l2.57,2.51c.38,.38,.58,.89,.58,1.39,0,0,0,0,0,0s0,0,0,0Z\"/></svg> กำลังดาวน์โหลด ${sel.length} ไฟล์`,'success');
+    if(!sel.length)sel=rooms.filter(r=>r.name).map(r=>r.room);
+    if(!sel.length){ toast('ไม่มีห้องที่มีผู้เช่าให้ออกบิล','error'); return; }
+    closeModal('exportModal');
+    if(exMode==='pdf') return exportRoomsPDF(sel);
+    return exportRoomsImage(sel);   // img (default)
   }
   closeModal('exportModal');
 }
@@ -1133,25 +1174,267 @@ function download(name,content){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
 }
 
+/* ═══════════ บิลรายห้องเป็นรูป/PDF (วาดด้วย Canvas — แนบ QR + บัญชีในไฟล์) ═══════════ */
+function _loadImg(src,cors){
+  return new Promise((res,rej)=>{ const im=new Image(); if(cors) im.crossOrigin='anonymous';
+    im.onload=()=>res(im); im.onerror=()=>rej(new Error('โหลดรูปไม่ได้')); im.src=src; });
+}
+/* ดึงรูป QR: ใช้ของที่อัปโหลดก่อน ไม่งั้นสร้าง QR จากเบอร์พร้อมเพย์ผ่าน canvas QR lib */
+async function _getQR(){
+  if(payInfo.customQR){ try{ return await _loadImg(payInfo.customQR,false);}catch(e){return null;} }
+  const pp=normPhone(payInfo.promptpay);
+  if(pp.length!==10 && pp.length!==13) return null;
+  // วาด QR ด้วย qrcodegen (pure JS) แทนการโหลดรูปข้าม origin → ไม่ติด CORS + ไม่ taint canvas
+  if(window._qrcache && window._qrcache[pp]) return window._qrcache[pp];
+  try{
+    const qrImg = await _makeQRImg(pp);
+    if(!window._qrcache) window._qrcache={};
+    window._qrcache[pp]=qrImg;
+    return qrImg;
+  }catch(e){ return null; }
+}
+/* สร้าง QR PromptPay ด้วย qrcode-generator (CDN) แล้วแปลงเป็น Image */
+async function _makeQRImg(pp){
+  // lazy-load qrcode-generator
+  if(!window.qrcode){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload=res; s.onerror=()=>rej(new Error('โหลด qrcode lib ไม่ได้'));
+      document.head.appendChild(s);
+    });
+  }
+  // สร้าง PromptPay payload (EMV QR)
+  const payload = _ppPayload(pp);
+  const qr=window.qrcode(0,'M');
+  qr.addData(payload); qr.make();
+  const size=200;
+  const cv=document.createElement('canvas'); cv.width=size; cv.height=size;
+  const ctx=cv.getContext('2d');
+  const mod=qr.getModuleCount();
+  const cell=Math.floor(size/mod);
+  const margin=Math.floor((size-cell*mod)/2);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle='#000';
+  for(let r=0;r<mod;r++) for(let c=0;c<mod;c++)
+    if(qr.isDark(r,c)) ctx.fillRect(margin+c*cell,margin+r*cell,cell,cell);
+  return await _loadImg(cv.toDataURL(),false);
+}
+/* สร้าง EMV PromptPay QR payload (เบอร์มือถือ 10 หลัก หรือ เลขบัตร 13 หลัก) */
+function _ppPayload(pp){
+  const isID=pp.length===13;
+  const target=isID?'00'+pp:'0066'+pp.substring(1); // เบอร์ → 0066XXXXXXXXX
+  const aid=isID?'A000000677010114':'A000000677010111';
+  const innerMerchant='0016'+aid+'0213'+target;
+  const body='0002011101'+String(innerMerchant.length).padStart(2,'0')+innerMerchant+'5303764'+'5802TH';
+  const crc=_crc16('6304'+body+'6304');
+  return body+'6304'+crc.toString(16).toUpperCase().padStart(4,'0');
+}
+function _crc16(str){
+  let c=0xFFFF;
+  for(let i=0;i<str.length;i++){
+    c^=str.charCodeAt(i)<<8;
+    for(let j=0;j<8;j++) c=(c&0x8000)?(c<<1)^0x1021:(c<<1);
+  }
+  return c&0xFFFF;
+}
+function _dlBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+
+/* วาดบิล 1 ห้องลง canvas แล้วคืน canvas (รอ QR โหลดเสร็จก่อน) */
+async function drawRoomBill(rm){
+  const c=calcRoom(rm);
+  const S=2, W=720, H=1060;
+  const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S;
+  const x=cv.getContext('2d'); x.scale(S,S);
+  const F='-apple-system,"Segoe UI","Sarabun","Noto Sans Thai",sans-serif';
+  const AC='#0d9488', INK='#1f2937', SUB='#6b7280', LINE='#e5e7eb';
+  x.textBaseline='alphabetic';
+  x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  // header
+  x.fillStyle=AC; x.fillRect(0,0,W,96);
+  x.fillStyle='#fff';
+  x.font='700 26px '+F; x.fillText('ใบแจ้งค่าเช่าห้องพัก',40,48);
+  x.font='400 15px '+F; x.fillText('RentHub · รอบบิล '+monthLabel(currentMonthKey),40,76);
+  // room + name
+  let y=150;
+  x.fillStyle=INK; x.font='700 22px '+F; x.fillText('ห้อง '+rm.room,40,y);
+  x.font='400 16px '+F; x.fillStyle=SUB; x.fillText('· '+(rm.name||'ห้องว่าง')+' · '+(rm.type==='air'?'ห้องแอร์':'ห้องพัดลม'),140,y);
+  // table header
+  y=186;
+  x.fillStyle='#f9fafb'; x.fillRect(40,y,W-80,38);
+  x.fillStyle=SUB; x.font='600 13px '+F;
+  x.fillText('รายการ',56,y+24); x.fillText('หน่วย',410,y+24);
+  x.textAlign='right'; x.fillText('จำนวนเงิน (บาท)',W-56,y+24); x.textAlign='left';
+  // rows
+  const rows=[
+    ['ค่าไฟฟ้า ('+c.eB+' → '+c.eA+')', c.eU+' หน่วย', c.eM],
+    ['ค่าน้ำประปา ('+c.wB+' → '+c.wA+')', c.wU+' หน่วย', c.wM],
+    ['ค่าเช่าห้อง ('+(rm.type==='air'?'แอร์':'พัดลม')+')', '-', c.rent],
+    ['ค่าส่วนกลาง', '-', c.midF]
+  ];
+  y+=38; x.font='400 15px '+F;
+  rows.forEach(r=>{
+    x.fillStyle=INK; x.fillText(r[0],56,y+28);
+    x.fillStyle=SUB; x.fillText(r[1],410,y+28);
+    x.fillStyle=INK; x.textAlign='right'; x.fillText(fmt(r[2]),W-56,y+28); x.textAlign='left';
+    x.strokeStyle=LINE; x.lineWidth=1; x.beginPath(); x.moveTo(40,y+44); x.lineTo(W-40,y+44); x.stroke();
+    y+=44;
+  });
+  // total
+  y+=12;
+  x.fillStyle='#ecfdf5'; x.fillRect(40,y,W-80,58);
+  x.fillStyle=AC; x.font='700 18px '+F; x.fillText('รวมทั้งสิ้น',56,y+37);
+  x.textAlign='right'; x.font='700 26px '+F; x.fillText(fmt(c.total)+' บาท',W-56,y+39); x.textAlign='left';
+  y+=92;
+  // pay box
+  x.fillStyle=INK; x.font='700 16px '+F; x.fillText('ช่องทางชำระเงิน',40,y); y+=16;
+  x.strokeStyle=LINE; x.lineWidth=1; x.strokeRect(40,y,W-80,256);
+  let ly=y+36; x.font='400 15px '+F;
+  [['ธนาคาร',payInfo.bankName],['เลขบัญชี',payInfo.bankAcc],['พร้อมเพย์',payInfo.promptpay],['ชื่อบัญชี',payInfo.accName]].forEach(p=>{
+    x.fillStyle=SUB; x.font='400 14px '+F; x.fillText(p[0],60,ly);
+    x.fillStyle=INK; x.font='600 15px '+F; x.fillText(p[1]||'-',170,ly);
+    ly+=36;
+  });
+  // QR (right)
+  const qr=await _getQR();
+  if(qr){
+    const qs=180, qx=W-60-qs, qy=y+34;
+    x.drawImage(qr,qx,qy,qs,qs);
+    x.fillStyle=SUB; x.font='400 12px '+F; x.textAlign='center';
+    x.fillText('สแกนเพื่อโอนเงิน',qx+qs/2,qy+qs+18); x.textAlign='left';
+  }
+  y+=256+34;
+  x.fillStyle=SUB; x.font='400 13px '+F;
+  x.fillText('* กรุณาส่งสลิปยืนยันหลังโอนเงินทุกครั้ง',40,y); y+=22;
+  x.fillText('ออกบิลเมื่อ '+new Date().toLocaleDateString('th-TH'),40,y);
+  return cv;
+}
+
+/* export บิลเป็นรูป PNG ทีละห้อง */
+async function exportRoomsImage(roomList){
+  const stamp=dateStamp();
+  for(let i=0;i<roomList.length;i++){
+    const rm=rooms.find(r=>r.room===roomList[i]); if(!rm) continue;
+    setSyncStatus('loading','กำลังสร้างบิล... ('+(i+1)+'/'+roomList.length+')');
+    const cv=await drawRoomBill(rm);
+    await new Promise(res=>cv.toBlob(b=>{ _dlBlob(b,'บิล_'+rm.room+'_'+stamp+'.png'); res(); },'image/png'));
+    await new Promise(r=>setTimeout(r,300));
+  }
+  setSyncStatus('ok','สร้างบิล (รูป) เสร็จ');
+  toast('ดาวน์โหลดบิล '+roomList.length+' ห้อง (รูป) แล้ว','success');
+}
+/* lazy-load jsPDF เฉพาะตอนเลือก PDF */
+async function ensureJsPDF(){
+  if(window.jspdf&&window.jspdf.jsPDF) return window.jspdf.jsPDF;
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=res; s.onerror=()=>rej(new Error('โหลด jsPDF ไม่ได้'));
+    document.head.appendChild(s);
+  });
+  if(!(window.jspdf&&window.jspdf.jsPDF)) throw new Error('jsPDF ไม่พร้อม');
+  return window.jspdf.jsPDF;
+}
+/* export บิลเป็น PDF ทีละห้อง (เน็ตหลุด → fallback เป็นรูป) */
+async function exportRoomsPDF(roomList){
+  const stamp=dateStamp(); let JsPDF;
+  try{ JsPDF=await ensureJsPDF(); }
+  catch(e){ toast('ทำ PDF ไม่ได้ (ตรวจเน็ต) — ดาวน์โหลดเป็นรูปแทน','error'); return exportRoomsImage(roomList); }
+  for(let i=0;i<roomList.length;i++){
+    const rm=rooms.find(r=>r.room===roomList[i]); if(!rm) continue;
+    setSyncStatus('loading','กำลังสร้าง PDF... ('+(i+1)+'/'+roomList.length+')');
+    const cv=await drawRoomBill(rm);
+    const img=cv.toDataURL('image/png');
+    const pdf=new JsPDF({orientation:'p',unit:'px',format:[cv.width,cv.height]});
+    pdf.addImage(img,'PNG',0,0,cv.width,cv.height);
+    pdf.save('บิล_'+rm.room+'_'+stamp+'.pdf');
+    await new Promise(r=>setTimeout(r,300));
+  }
+  setSyncStatus('ok','สร้าง PDF เสร็จ');
+  toast('ดาวน์โหลดบิล '+roomList.length+' ห้อง (PDF) แล้ว','success');
+}
+
 /* ── PAY ── */
+/* Custom QR: เก็บใน localStorage เพราะ base64 ใหญ่เกินส่งขึ้น Sheet ผ่าน JSONP */
+const QR_LS_KEY = 'renthub_customQR';
+function loadCustomQR(){ try{ return localStorage.getItem(QR_LS_KEY)||''; }catch(e){ return ''; } }
+function handleQRUpload(ev){
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  if(!f.type.startsWith('image/')){ toast('กรุณาเลือกไฟล์รูปภาพ','error'); return; }
+  if(f.size > 2*1024*1024){ toast('รูป QR ใหญ่เกิน 2MB — กรุณาย่อขนาดก่อน','error'); ev.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    payInfo.customQR = e.target.result;
+    try{ localStorage.setItem(QR_LS_KEY, payInfo.customQR); }
+    catch(err){ toast('เก็บ QR ไม่ได้ (พื้นที่เครื่องเต็ม)','error'); return; }
+    syncQRPreview(); updateQR();
+    toast('อัปโหลด QR ของคุณแล้ว','success');
+  };
+  reader.readAsDataURL(f);
+}
+function clearCustomQR(){
+  payInfo.customQR = '';
+  try{ localStorage.removeItem(QR_LS_KEY); }catch(e){}
+  const fileEl=el('pe_qrFile'); if(fileEl) fileEl.value='';
+  syncQRPreview(); updateQR();
+  toast('ลบ QR ที่อัปโหลด · กลับไปใช้ QR จากเบอร์พร้อมเพย์','info');
+}
+function syncQRPreview(){
+  const has=!!payInfo.customQR, prev=el('pe_qrPreview'), clr=el('pe_qrClear');
+  if(prev){ prev.src=payInfo.customQR||''; prev.style.display=has?'block':'none'; }
+  if(clr){ clr.style.display=has?'inline-flex':'none'; }
+}
 function updateQR(){
-  const pp=payInfo.promptpay.replace(/[^0-9]/g,'');
+  const pp=normPhone(payInfo.promptpay);   // เติม 0 ให้ถูกก่อนสร้าง QR
+  payInfo.promptpay=pp;                     // เก็บค่าที่ normalize แล้ว
   el('payBankName').textContent=payInfo.bankName;
   el('payBankAcc').textContent=payInfo.bankAcc;
-  el('payPromptpay').textContent=payInfo.promptpay;
+  el('payPromptpay').textContent=pp||'—';
   el('payAccName').textContent=payInfo.accName;
-  el('qrImg').src=`https://promptpay.io/${pp||'0000000000'}.png`;
+  const img=el('qrImg');
+  // มี QR ที่เจ้าของอัปโหลดเอง → ใช้รูปนั้นก่อน
+  if(payInfo.customQR){
+    img.src=payInfo.customQR; img.style.opacity='1'; img.alt='QR ที่อัปโหลด';
+    return;
+  }
+  // ไม่งั้น สร้าง QR จากเบอร์พร้อมเพย์ (10 หรือ 13 หลัก) ผ่าน canvas — ไม่ติด CORS
+  const valid=(pp.length===10||pp.length===13);
+  if(valid){
+    img.src=''; img.style.opacity='0.4'; img.alt='กำลังสร้าง QR...';
+    _makeQRImg(pp).then(qrImg=>{
+      img.src=qrImg.src; img.style.opacity='1';
+    }).catch(()=>{
+      // fallback: โหลดจาก promptpay.io (display เท่านั้น ไม่ใช้ใน canvas export)
+      img.src=`https://promptpay.io/${pp}.png`;
+      img.style.opacity='1';
+    });
+  } else {
+    img.src='';
+    img.alt='กรุณาใส่เบอร์พร้อมเพย์ให้ถูกต้อง หรืออัปโหลด QR ของคุณเอง';
+  }
 }
 function openPayEdit(){
+  payInfo.customQR = loadCustomQR();   // โหลด QR ล่าสุดจากเครื่อง
   el('pe_bankName').value=payInfo.bankName; el('pe_bankAcc').value=payInfo.bankAcc;
   el('pe_promptpay').value=payInfo.promptpay; el('pe_accName').value=payInfo.accName;
+  const fileEl=el('pe_qrFile'); if(fileEl) fileEl.value='';
+  syncQRPreview();
   el('payEditModal').classList.add('open');
 }
 async function savePayInfo(){
-  payInfo.bankName=el('pe_bankName').value; payInfo.bankAcc=el('pe_bankAcc').value;
-  payInfo.promptpay=el('pe_promptpay').value; payInfo.accName=el('pe_accName').value;
+  payInfo.bankName=el('pe_bankName').value.trim();
+  payInfo.bankAcc=el('pe_bankAcc').value.trim();
+  payInfo.promptpay=normPhone(el('pe_promptpay').value);  // เติม 0 ให้ถูกก่อนบันทึก
+  payInfo.accName=el('pe_accName').value.trim();
+  // ตรวจสอบเบอร์พร้อมเพย์
+  const pp=payInfo.promptpay;
+  if(pp && pp.length!==10 && pp.length!==13){
+    toast('เบอร์พร้อมเพย์ต้องเป็น 10 หลัก (มือถือ) หรือ 13 หลัก (บัตรปชช.)','error');
+    return;
+  }
   const btn=event&&event.target?event.target.closest('button'):null;
-  if(btn) btn.disabled=true;
+  btnState(btn,'saving');
   setSyncStatus('loading','กำลังบันทึก...');
   try {
     await apiPost({action:'saveConfig', config:{
@@ -1160,14 +1443,16 @@ async function savePayInfo(){
     }});
     cfg.bankName=payInfo.bankName; cfg.bankAcc=payInfo.bankAcc;
     cfg.promptpay=payInfo.promptpay; cfg.accName=payInfo.accName;
-    updateQR(); closeModal('payEditModal');
+    updateQR();
+    btnState(btn,'done');
     setSyncStatus('ok','บันทึกแล้ว');
-    toast(svgIcon('checkbox')+' บันทึกข้อมูลชำระเงินแล้ว','success');
+    toast('บันทึกข้อมูลชำระเงินแล้ว','success');
+    setTimeout(()=>closeModal('payEditModal'),900);
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+    btnState(btn,'reset');
+    toast('บันทึกไม่ได้: '+err.message,'error');
   }
-  if(btn) btn.disabled=false;
 }
 function copyText(id){
   const t=el(id).textContent;
@@ -1178,6 +1463,8 @@ function copyText(id){
 async function saveSettings(){
   cfg.elecRate=+el('s_elec').value||7; cfg.waterRate=+el('s_water').value||17;
   cfg.rentAir=+el('s_air').value||4000; cfg.rentFan=+el('s_fan').value||3500; cfg.mid=+el('s_mid').value||100;
+  const btn=event&&event.target?event.target.closest('button'):null;
+  btnState(btn,'saving');
   setSyncStatus('loading','กำลังบันทึกอัตรา...');
   try {
     await apiPost({action:'saveConfig', config:{
@@ -1185,11 +1472,13 @@ async function saveSettings(){
       rentAir:cfg.rentAir, rentFan:cfg.rentFan, mid:cfg.mid
     }});
     renderAll(); buildMonthSelectors();
+    btnState(btn,'done');
     setSyncStatus('ok','บันทึกแล้ว');
-    toast(svgIcon('checkbox')+' บันทึกอัตราลง Sheet แล้ว','success');
+    toast('บันทึกอัตราค่าบริการลง Sheet แล้ว','success');
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    toast(svgIcon('square-exclamation')+' บันทึกไม่ได้: '+err.message,'error');
+    btnState(btn,'reset');
+    toast('บันทึกไม่ได้: '+err.message,'error');
   }
 }
 
@@ -1224,7 +1513,46 @@ function el2(id,fn){const e=document.getElementById(id);if(e)fn(e);}
 function closeModal(id){el(id).classList.remove('open');}
 function closeOverlay(e,id){if(e.target.id===id)closeModal(id);}
 function toggleSidebar(){el('sidebar').classList.toggle('open');el('sbBackdrop').classList.toggle('show');}
-function toast(msg,type=''){const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=msg;el('toastWrap').appendChild(t);setTimeout(()=>t.remove(),3200);}
+/* toast แจ้งเตือนมุมขวาบน + ไอคอนวงกลมตามชนิด */
+function toast(msg,type=''){
+  const icons={
+    success:'<path d="M5 12l5 5L20 7"/>',
+    error:'<path d="M12 7.5v6M12 16.8h.01" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+    info:'<path d="M12 11v5M12 8h.01" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+    loading:'<path d="M12 3v4M12 17v4M5 12H3M21 12h-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>'
+  };
+  const ic=icons[type]||icons.info;
+  const isStroke=(type==='success');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span class="toast-ic"><svg class="svgic" viewBox="0 0 24 24" style="${isStroke?'fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round':''}">${ic}</svg></span><span class="toast-msg">${msg}</span>`;
+  el('toastWrap').appendChild(t);
+  setTimeout(()=>t.remove(),3800);
+}
+
+/* แสดงสถานะปุ่ม: saving → done(✓เขียว) → กลับปกติ */
+function btnState(btn, state){
+  if(!btn) return;
+  const ICON_CHECK='<svg class="svgic" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12l5 5L20 7"/></svg>';
+  if(state==='saving'){
+    btn.dataset._html=btn.innerHTML;
+    btn.classList.add('btn-saving');
+    btn.disabled=true;
+  } else if(state==='done'){
+    btn.classList.remove('btn-saving');
+    btn.classList.add('btn-done');
+    btn.innerHTML=ICON_CHECK+' สำเร็จ';
+    setTimeout(()=>{
+      btn.classList.remove('btn-done');
+      if(btn.dataset._html) btn.innerHTML=btn.dataset._html;
+      btn.disabled=false;
+    },1600);
+  } else { // reset (error)
+    btn.classList.remove('btn-saving','btn-done');
+    if(btn.dataset._html) btn.innerHTML=btn.dataset._html;
+    btn.disabled=false;
+  }
+}
 
 window.addEventListener('DOMContentLoaded',init);
 </script>
