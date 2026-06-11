@@ -716,26 +716,31 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
 const API_URL = 'https://script.google.com/macros/s/AKfycbySpn6tvzlQ97kLysaVnf1Z3n_ELkYgwknCv3MQF_6AwCBmlmt0U3mnB-WA1ypckhQ/exec';
 
 let _jsonpId = 0;
-/* โหลดผ่าน <script> tag → ไม่ติด CORS (Apps Script ห่อ response เป็น callback) */
+/* โหลดผ่าน <script> tag → ไม่ติด CORS (Apps Script ห่อ response เป็น callback)
+   ป้องกันค้าง: ถ้า script โหลดเสร็จแต่ callback ไม่ทำงานใน 1.5s = response ผิดรูปแบบ → reject ทันที */
 function jsonp(params){
   return new Promise((resolve, reject)=>{
     const cb = 'rhcb_' + (++_jsonpId) + '_' + Date.now();
-    const timer = setTimeout(()=>{
-      cleanup(); reject(new Error('หมดเวลาเชื่อมต่อ (timeout)'));
-    }, 18000);
+    let settled = false;
+    function finish(fn, arg){ if(settled) return; settled=true; cleanup(); fn(arg); }
+    const timer = setTimeout(()=>finish(reject, new Error('หมดเวลาเชื่อมต่อ (timeout)')), 12000);
     function cleanup(){
       clearTimeout(timer);
       delete window[cb];
       if(s && s.parentNode) s.parentNode.removeChild(s);
     }
-    window[cb] = (data)=>{ cleanup(); 
-      if(data && data.ok) resolve(data.data);
-      else reject(new Error((data&&data.error)||'API error'));
+    window[cb] = (data)=>{
+      if(data && data.ok) finish(resolve, data.data);
+      else finish(reject, new Error((data&&data.error)||'API error'));
     };
     const qs = new URLSearchParams({...params, callback:cb}).toString();
     const s = document.createElement('script');
     s.src = API_URL + '?' + qs;
-    s.onerror = ()=>{ cleanup(); reject(new Error('โหลดสคริปต์ไม่สำเร็จ')); };
+    s.onerror = ()=>finish(reject, new Error('โหลดสคริปต์ไม่สำเร็จ (ตรวจอินเทอร์เน็ต/URL)'));
+    s.onload = ()=>{
+      // script โหลดเสร็จแล้ว — รอ callback 1.5s ถ้ายังไม่ทำงาน = response ไม่ใช่ JSONP
+      setTimeout(()=>finish(reject, new Error('เซิร์ฟเวอร์ตอบผิดรูปแบบ — เช็ค Deploy Apps Script เป็น Web App + Who has access: Anyone')), 1500);
+    };
     document.body.appendChild(s);
   });
 }
@@ -747,11 +752,23 @@ async function apiGet(params){ return jsonp(params); }
    เพิ่ม retry อัตโนมัติ 1 ครั้ง เผื่อสัญญาณวูบระหว่างยิง */
 async function apiPost(payload){
   const bodyStr = JSON.stringify(payload);
+  const t0=performance.now(), act=payload.action||'?';
+  console.log('%c[RentHub] ⬆ SAVE START','color:#3b82f6', act, new Date().toLocaleTimeString());
   try {
-    return await jsonp({ payload: bodyStr });
+    const r = await jsonp({ payload: bodyStr });
+    console.log('%c[RentHub] ✓ SAVE OK','color:#16a34a', act, ((performance.now()-t0)/1000).toFixed(2)+'s');
+    return r;
   } catch(e1){
-    await new Promise(r=>setTimeout(r,600));   // รอ 0.6 วิ แล้วลองใหม่
-    return await jsonp({ payload: bodyStr });
+    console.warn('%c[RentHub] ⚠ RETRY','color:#f59e0b', act, '—', e1.message);
+    await new Promise(r=>setTimeout(r,600));
+    try {
+      const r = await jsonp({ payload: bodyStr });
+      console.log('%c[RentHub] ✓ SAVE OK (retry)','color:#16a34a', act);
+      return r;
+    } catch(e2){
+      console.error('%c[RentHub] ✗ SAVE FAIL','color:#dc2626', act, '—', e2.message);
+      throw e2;
+    }
   }
 }
 
@@ -1044,13 +1061,13 @@ async function saveBill(btn){
       await apiPost({action:'saveBill', month:currentMonthKey, bills:part});
     }
     setSyncStatus('ok','บันทึกแล้ว · '+monthLabel(currentMonthKey));
-    btnState(btn,'done');
     toast('บันทึกบิลลง Google Sheets แล้ว','success');
     renderAll();
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    btnState(btn,'reset');
     toast('บันทึกไม่ได้: '+err.message,'error');
+  } finally {
+    btnState(btn,'reset');   // ปุ่มกลับมากดได้ + spinner หาย เสมอ
   }
 }
 
@@ -1129,8 +1146,9 @@ async function saveRoom(btn){
     closeModal('roomModal'); renderAll();
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    btnState(btn,'reset');
     toast('บันทึกไม่ได้: '+err.message,'error');
+  } finally {
+    btnState(btn,'reset');   // ปุ่มกลับมากดได้ + spinner หาย เสมอ
   }
 }
 
@@ -1447,14 +1465,14 @@ async function savePayInfo(btn){
     cfg.bankName=payInfo.bankName; cfg.bankAcc=payInfo.bankAcc;
     cfg.promptpay=payInfo.promptpay; cfg.accName=payInfo.accName;
     updateQR();
-    btnState(btn,'done');
     setSyncStatus('ok','บันทึกแล้ว');
     toast('บันทึกข้อมูลชำระเงินแล้ว','success');
-    setTimeout(()=>closeModal('payEditModal'),900);
+    closeModal('payEditModal');
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    btnState(btn,'reset');
     toast('บันทึกไม่ได้: '+err.message,'error');
+  } finally {
+    btnState(btn,'reset');   // ปุ่มกลับมากดได้ + spinner หาย เสมอ
   }
 }
 function copyText(id){
@@ -1475,13 +1493,13 @@ async function saveSettings(btn){
       rentAir:cfg.rentAir, rentFan:cfg.rentFan, mid:cfg.mid
     }});
     renderAll(); buildMonthSelectors();
-    btnState(btn,'done');
     setSyncStatus('ok','บันทึกแล้ว');
     toast('บันทึกอัตราค่าบริการลง Sheet แล้ว','success');
   } catch(err) {
     setSyncStatus('error','บันทึกไม่สำเร็จ');
-    btnState(btn,'reset');
     toast('บันทึกไม่ได้: '+err.message,'error');
+  } finally {
+    btnState(btn,'reset');   // ปุ่มกลับมากดได้ + spinner หาย เสมอ
   }
 }
 
