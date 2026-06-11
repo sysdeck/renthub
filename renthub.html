@@ -853,7 +853,18 @@ function applyData(data){
     customQR: loadCustomQR()
   };
   if(data.months) availableMonths = data.months.slice();
-  if(data.month) currentMonthKey = data.month;
+  // คำนวณเดือนปัจจุบันจริงจาก client เสมอ (กัน Apps Script ส่ง tab ล่าสุดที่อาจเป็นเดือนอนาคต)
+  const _n=new Date();
+  const _cmk=`${String(_n.getMonth()+1).padStart(2,'0')}_${_n.getFullYear()+543}`;
+  // ถ้า Sheet บอก data.month แต่เป็นเดือนอนาคต → ใช้เดือนปัจจุบันแทน
+  if(data.month && !currentMonthKey){
+    const [_dm,_dy]=data.month.split('_').map(Number);
+    const [_cm,_cy]=_cmk.split('_').map(Number);
+    const _isFuture=(_dy>_cy)||(_dy===_cy&&_dm>_cm);
+    currentMonthKey = _isFuture ? _cmk : data.month;
+  } else if(!currentMonthKey){
+    currentMonthKey = _cmk;
+  }
   if(data.bills){
     bills[currentMonthKey] = {};
     Object.entries(data.bills).forEach(([room,b])=>{
