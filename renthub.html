@@ -1279,10 +1279,14 @@ function _loadImg(src,cors){
 }
 /* ดึงรูป QR: ใช้ของที่อัปโหลดก่อน ไม่งั้นสร้าง QR จากเบอร์พร้อมเพย์ผ่าน canvas QR lib */
 async function _getQR(){
-  if(payInfo.customQR){ try{ return await _loadImg(payInfo.customQR,false);}catch(e){return null;} }
+  // sync จาก localStorage ก่อนเสมอ กัน payInfo ใน memory ว่างตอน export
+  const cQR = payInfo.customQR || loadCustomQR();
+  if(cQR){
+    payInfo.customQR = cQR;
+    try{ return await _loadImg(cQR, false); }catch(e){ return null; }
+  }
   const pp=normPhone(payInfo.promptpay);
   if(pp.length!==10 && pp.length!==13) return null;
-  // วาด QR ด้วย qrcodegen (pure JS) แทนการโหลดรูปข้าม origin → ไม่ติด CORS + ไม่ taint canvas
   if(window._qrcache && window._qrcache[pp]) return window._qrcache[pp];
   try{
     const qrImg = await _makeQRImg(pp);
@@ -1370,8 +1374,7 @@ async function drawRoomBill(rm){
   x.fillStyle='#f9fafb'; x.fillRect(ML,y,W-ML*2,34);
   x.fillStyle=SUB; x.font='600 12px '+F;
   x.fillText('รายการ',ML+12,y+22);
-  x.textAlign='center'; x.fillText('หน่วย',ML+190,y+22);
-  x.textAlign='right'; x.fillText('จำนวนเงิน',MR-8,y+22); x.textAlign='left';
+  x.textAlign='right'; x.fillText('จำนวนเงิน (บาท)',MR-8,y+22); x.textAlign='left';
 
   /* ── Rows (ไม่แสดงเลขมิเตอร์) ── */
   const rows=[
@@ -1384,8 +1387,8 @@ async function drawRoomBill(rm){
   y+=34;
   rows.forEach(r=>{
     x.fillStyle=INK; x.font='400 14px '+F; x.fillText(r[0],ML+12,y+24);
-    x.fillStyle=SUB; x.textAlign='center'; x.fillText(r[1],ML+190,y+24); x.textAlign='left';
-    x.fillStyle=INK; x.textAlign='right'; x.fillText(fmt(r[2]),MR-8,y+24); x.textAlign='left';
+    x.fillStyle=INK; x.textAlign='right'; x.font='500 14px '+F;
+    x.fillText(fmt(r[2]),MR-16,y+24); x.textAlign='left'; x.font='400 14px '+F;
     x.strokeStyle=LINE; x.lineWidth=1; x.beginPath(); x.moveTo(ML,y+38); x.lineTo(MR,y+38); x.stroke();
     y+=40;
   });
@@ -1394,8 +1397,8 @@ async function drawRoomBill(rm){
   y+=10;
   x.fillStyle='#ecfdf5'; x.fillRect(ML,y,W-ML*2,52);
   x.fillStyle=AC; x.font='700 15px '+F; x.fillText('รวมทั้งสิ้น',ML+12,y+34);
-  x.textAlign='right'; x.font='700 22px '+F;
-  x.fillText(fmt(c.total)+' บาท', MR-12, y+34);   // MR-12 = safe margin
+  x.textAlign='right'; x.font='700 20px '+F;
+  x.fillText(fmt(c.total)+' บาท', MR-20, y+34);   // margin 20px กัน clip
   x.textAlign='left'; y+=74;
 
   /* ── ช่องทางชำระเงิน ── */
