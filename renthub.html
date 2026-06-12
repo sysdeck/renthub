@@ -813,7 +813,12 @@ let homePage=1;
 async function init(){
   setSyncStatus('loading','กำลังโหลดข้อมูลจาก Google Sheets...');
   try {
-    const data = await apiGet({action:'all'});
+    // คำนวณเดือนปัจจุบันจริงจาก client แล้วส่งให้ .gs ตั้งแต่แรก
+    // (ไม่ปล่อยให้ .gs ใช้ latestMonth() เพราะถ้ามี tab เดือนอนาคต เช่น 07_2569
+    //  มันจะส่ง bills ของเดือนอนาคต (ที่เป็น 0) มาแทนเดือนปัจจุบัน)
+    const _n=new Date();
+    const _cmk=`${String(_n.getMonth()+1).padStart(2,'0')}_${_n.getFullYear()+543}`;
+    const data = await apiGet({action:'all', month:_cmk});
     applyData(data);
     setSyncStatus('ok','เชื่อมต่อแล้ว · '+rooms.length+' ห้อง');
     buildMonthSelectors();
