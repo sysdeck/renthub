@@ -746,15 +746,14 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">ตรวจสอบบิลก่อนบันทึก — บันทึกแล้วจะไปรูปถัดไปทันที</p>
 
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;padding:8px;background:var(--bg-card2);border-radius:10px">
-      <span style="font-size:12px;color:var(--text-secondary)">ขนาดเนื้อหา</span>
-      <button class="bs-btn" onclick="epvZoom(-0.05)" title="เล็กลง">−</button>
+      <span style="font-size:12px;color:var(--text-secondary)">ขอบรูปที่เซฟ</span>
+      <button class="bs-btn" onclick="epvZoom(-0.05)" title="เนื้อหาเล็กลง ขอบเยอะขึ้น">−</button>
       <span id="epvScaleLabel" style="font-size:13px;font-weight:600;min-width:42px;text-align:center">100%</span>
-      <button class="bs-btn" onclick="epvZoom(0.05)" title="ใหญ่ขึ้น">+</button>
+      <button class="bs-btn" onclick="epvZoom(0.05)" title="เนื้อหาใหญ่ขึ้น ขอบน้อยลง">+</button>
       <button class="bs-btn bs-reset" onclick="epvZoomReset()" title="รีเซ็ต">⟲</button>
     </div>
-    <div id="epvCanvasWrap" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;min-height:200px">
-      <canvas id="epvCanvas" style="width:100%;display:block"></canvas>
-    </div>
+    <div id="epvHtmlWrap" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff"></div>
+    <canvas id="epvCanvas" style="display:none"></canvas>
 
     <div style="display:flex;gap:10px;margin-top:14px">
       <button class="btn" id="epvSkipBtn" onclick="epvSkip()" style="flex:1;justify-content:center;border:1.5px solid var(--border);background:var(--bg-card2)">
@@ -1566,57 +1565,96 @@ function startExportPreview(mode, roomList){
   epvRender();
 }
 
-/* วาดบิลห้องปัจจุบันลง canvas preview + เตรียมไฟล์ไว้รอบันทึก */
-async function epvRender(){
+/* แสดงบิลห้องปัจจุบันเป็น HTML จริง (อ่านครบ ไม่ตกขอบ) */
+function epvRender(){
   if(_epv.idx>=_epv.list.length){ return epvFinish(); }
   const room=_epv.list[_epv.idx];
   const rm=rooms.find(r=>r.room===room);
   el('epvProgress').textContent=`(${_epv.idx+1}/${_epv.list.length}) · ห้อง ${room}`;
   el('epvScaleLabel').textContent=Math.round(getBillScale()*100)+'%';
-  el('epvSaveBtn').disabled=true; el('epvSkipBtn').disabled=true;
   if(!rm){ return epvAdvance(); }   // ห้องหาย ข้ามอัตโนมัติ
-
-  const cv=await drawRoomBill(rm);
-  // แสดง canvas preview
-  const pv=el('epvCanvas'); const ctx=pv.getContext('2d');
-  pv.width=cv.width; pv.height=cv.height;
-  ctx.drawImage(cv,0,0);
-  pv.style.aspectRatio=(cv.width/cv.height);
-
-  // เตรียม blob/ไฟล์ไว้รอกด "บันทึกภาพ"
-  const stamp=dateStamp();
-  if(_epv.mode==='pdf'){
-    _epv.curFname='บิล_'+room+'_'+stamp+'.pdf';
-    _epv.curBlob=cv;   // เก็บ canvas ไว้ gen PDF ตอนกดบันทึก
-  } else {
-    _epv.curFname='บิล_'+room+'_'+stamp+'.png';
-    _epv.curBlob=await new Promise(res=>cv.toBlob(res,'image/png'));
-  }
+  el('epvHtmlWrap').innerHTML = buildBillHTML(rm);
   el('epvSaveBtn').disabled=false; el('epvSkipBtn').disabled=false;
+  // โหลด QR เข้า preview (async)
+  _getQR().then(qr=>{
+    const slot=el('epvQrSlot'); if(!slot) return;
+    if(qr){
+      slot.innerHTML=`<img src="${qr.src}" style="width:120px;height:120px;display:block"><div style="font-size:10px;color:#6b7280;margin-top:3px">สแกนเพื่อโอนเงิน</div>`;
+    } else {
+      slot.innerHTML=`<div style="width:120px;height:120px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:10px;text-align:center">ไม่มี QR<br>(ใส่พร้อมเพย์หรืออัปโหลด)</div>`;
+    }
+  });
 }
 
-/* ปรับขนาดเนื้อหา −/+ แล้ววาด preview + ไฟล์ใหม่ (จำค่าใน localStorage) */
-async function epvZoom(delta){
+/* สร้าง HTML บิล (ตารางจริง + บัญชี + QR) สำหรับ preview */
+function buildBillHTML(rm){
+  const c=calcRoom(rm);
+  const pp=normPhone(payInfo.promptpay);
+  const qrSrc = payInfo.customQR || (pp.length===10||pp.length===13 ? '' : '');
+  const rows=[
+    ['ค่าไฟฟ้า', c.eM],
+    ['ค่าน้ำประปา', c.wM],
+    ['ค่าเช่าห้อง ('+(rm.type==='air'?'แอร์':'พัดลม')+')', c.rent],
+    ['ค่าส่วนกลาง', c.midF]
+  ];
+  if(c.otherAmt) rows.push(['อื่นๆ'+(c.otherReason?' ('+c.otherReason+')':''), c.otherAmt]);
+  const rowsHtml=rows.map(r=>`<tr><td style="padding:9px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#1f2937">${r[0]}</td><td style="padding:9px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#1f2937;text-align:right;font-weight:500">${fmt(r[1])}</td></tr>`).join('');
+  return `<div style="font-family:'Noto Sans Thai','Sarabun',sans-serif;color:#1f2937">
+    <div style="background:#0d9488;color:#fff;padding:16px 18px">
+      <div style="font-size:19px;font-weight:700">ใบแจ้งค่าเช่าห้องพัก</div>
+      <div style="font-size:12px;opacity:.92;margin-top:2px">Eazy Apartment · รอบบิล ${monthLabel(currentMonthKey)}</div>
+    </div>
+    <div style="padding:14px 16px">
+      <div style="margin-bottom:12px"><span style="font-size:18px;font-weight:700">ห้อง ${rm.room}</span><span style="font-size:13px;color:#6b7280;margin-left:8px">· ${rm.name||'ห้องว่าง'} · ${rm.type==='air'?'ห้องแอร์':'ห้องพัดลม'}</span></div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <tr style="background:#f0fdf9"><th style="padding:8px 12px;font-size:11px;color:#6b7280;text-align:left;font-weight:600">รายการ</th><th style="padding:8px 12px;font-size:11px;color:#6b7280;text-align:right;font-weight:600">จำนวนเงิน (บาท)</th></tr>
+        ${rowsHtml}
+      </table>
+      <div style="background:#ecfdf5;border-radius:8px;padding:11px 12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:14px;font-weight:700;color:#0d9488">รวมทั้งสิ้น</span>
+        <span style="font-size:19px;font-weight:700;color:#0d9488">${fmt(c.total)} บาท</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;margin:16px 0 8px">ช่องทางชำระเงิน</div>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px;font-size:12px;line-height:2.1">
+          <div><span style="color:#6b7280">ธนาคาร</span> &nbsp;<b>${payInfo.bankName||'—'}</b></div>
+          <div><span style="color:#6b7280">เลขบัญชี</span> &nbsp;<b>${payInfo.bankAcc||'—'}</b></div>
+          <div><span style="color:#6b7280">พร้อมเพย์</span> &nbsp;<b>${payInfo.promptpay||'—'}</b></div>
+          <div><span style="color:#6b7280">ชื่อบัญชี</span> &nbsp;<b>${payInfo.accName||'—'}</b></div>
+        </div>
+        <div id="epvQrSlot" style="text-align:center"><div style="width:120px;height:120px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px">กำลังโหลด QR…</div></div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;margin-top:12px">* กรุณาส่งสลิปยืนยันหลังโอนเงินทุกครั้ง<br>ออกบิลเมื่อ ${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}</div>
+    </div>
+  </div>`;
+}
+
+/* ปรับขนาดเนื้อหา −/+ (มีผลกับขอบของรูปที่เซฟ · จำใน localStorage) */
+function epvZoom(delta){
   setBillScale(getBillScale()+delta);
-  await epvRender();
+  el('epvScaleLabel').textContent=Math.round(getBillScale()*100)+'%';
 }
-async function epvZoomReset(){
+function epvZoomReset(){
   setBillScale(1);
-  await epvRender();
+  el('epvScaleLabel').textContent='100%';
 }
 
-/* กด "บันทึกภาพ" — บันทึกไฟล์ปัจจุบัน แล้วไปรูปถัดไปทันที */
+/* กด "บันทึกภาพ" — วาด canvas จากห้องปัจจุบัน แล้วเซฟลงเครื่อง → ไปรูปถัดไป */
 async function epvSave(){
   el('epvSaveBtn').disabled=true; el('epvSkipBtn').disabled=true;
+  const room=_epv.list[_epv.idx];
+  const rm=rooms.find(r=>r.room===room);
+  const stamp=dateStamp();
   try{
+    const cv=await drawRoomBill(rm);   // วาดรูปจริงตอนกดเซฟ (ใช้ scale ล่าสุด)
     if(_epv.mode==='pdf'){
       const JsPDF=await ensureJsPDF();
-      const cv=_epv.curBlob;
       const pdf=new JsPDF({orientation:'p',unit:'px',format:[cv.width,cv.height]});
       pdf.addImage(cv.toDataURL('image/png'),'PNG',0,0,cv.width,cv.height);
-      pdf.save(_epv.curFname);
+      pdf.save('บิล_'+room+'_'+stamp+'.pdf');
     } else {
-      const blob=_epv.curBlob, fname=_epv.curFname;
+      const fname='บิล_'+room+'_'+stamp+'.png';
+      const blob=await new Promise(res=>cv.toBlob(res,'image/png'));
       if(navigator.canShare && navigator.canShare({files:[new File([blob],'x.png',{type:'image/png'})]})){
         try{ await navigator.share({files:[new File([blob],fname,{type:'image/png'})],title:fname}); }
         catch(e){ if(e.name!=='AbortError') _dlBlob(blob,fname); }
