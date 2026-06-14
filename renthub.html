@@ -312,6 +312,10 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
 .help-box.open .help-body{max-height:600px}
 .help-body-inner{padding:0 14px 13px;font-size:12px;color:var(--text-secondary);line-height:1.8}
 .help-body-inner b{color:var(--text-primary)}
+/* ปุ่มปรับขนาดเนื้อหาบิล (−/+) ใน export preview */
+.bs-btn{width:32px;height:32px;border:1.5px solid var(--border);background:var(--bg-card);border-radius:8px;cursor:pointer;font-size:18px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s}
+.bs-btn:hover{border-color:var(--accent);color:var(--accent)}
+.bs-btn.bs-reset{font-size:15px}
 .note-box b{color:var(--text-primary)}
 
 .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
@@ -741,6 +745,13 @@ tfoot td{padding:15px 12px;font-weight:700;background:var(--bg-thead);border-top
     <h3 class="sheet-title" style="margin-bottom:4px">Exports <span id="epvProgress" style="font-size:13px;font-weight:400;color:var(--text-muted)"></span></h3>
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">ตรวจสอบบิลก่อนบันทึก — บันทึกแล้วจะไปรูปถัดไปทันที</p>
 
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;padding:8px;background:var(--bg-card2);border-radius:10px">
+      <span style="font-size:12px;color:var(--text-secondary)">ขนาดเนื้อหา</span>
+      <button class="bs-btn" onclick="epvZoom(-0.05)" title="เล็กลง">−</button>
+      <span id="epvScaleLabel" style="font-size:13px;font-weight:600;min-width:42px;text-align:center">100%</span>
+      <button class="bs-btn" onclick="epvZoom(0.05)" title="ใหญ่ขึ้น">+</button>
+      <button class="bs-btn bs-reset" onclick="epvZoomReset()" title="รีเซ็ต">⟲</button>
+    </div>
     <div id="epvCanvasWrap" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;min-height:200px">
       <canvas id="epvCanvas" style="width:100%;display:block"></canvas>
     </div>
@@ -1420,7 +1431,7 @@ function _crc16(str){
 function _dlBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
 
 /* วาดบิล 1 ห้องลง canvas แล้วคืน canvas (รอ QR โหลดเสร็จก่อน) */
-async function drawRoomBill(rm){
+async function _drawBillContent(rm){
   const c=calcRoom(rm);
   /* W=400 × S=2 = 800px จริง — fit iPhone ไม่ scroll, amount ไม่ตกขอบ */
   const S=2, W=400, H=960;
@@ -1512,6 +1523,37 @@ async function drawRoomBill(rm){
   return out;
 }
 
+/* ═══════════ ขนาดเนื้อหาบิล (ปรับ −/+ ได้ · จำใน localStorage ต่อเครื่อง) ═══════════ */
+const BILLSCALE_KEY='eazy_billScale';
+function getBillScale(){
+  const v=parseFloat(localStorage.getItem(BILLSCALE_KEY));
+  return (v&&v>=0.5&&v<=1.2)?v:1;   // default 100%
+}
+function setBillScale(v){
+  v=Math.max(0.5,Math.min(1.2,Math.round(v*100)/100));
+  try{ localStorage.setItem(BILLSCALE_KEY,v); }catch(e){}
+  return v;
+}
+
+/* wrapper: วาดเนื้อหาบิล (_drawBillContent) แล้วจัดกลางในกรอบคงที่
+   กรอบนอกขนาดเท่าเดิมเสมอ · เนื้อหาด้านในย่อ/ขยายตาม scale (เล็ก = ขอบขาวเยอะ) */
+async function drawRoomBill(rm){
+  const scale=getBillScale();
+  const inner=await _drawBillContent(rm);   // canvas เนื้อหา (ขนาดเต็ม 100%)
+  // กรอบนอก = ขนาดเนื้อหาเต็ม 100% เสมอ (ไม่ขึ้นกับ scale)
+  const FRAME_W=inner.width, FRAME_H=inner.height;
+  const out=document.createElement('canvas');
+  out.width=FRAME_W; out.height=FRAME_H;
+  const ox=out.getContext('2d');
+  // พื้นหลังขาวเต็มกรอบ
+  ox.fillStyle='#fff'; ox.fillRect(0,0,FRAME_W,FRAME_H);
+  // วาดเนื้อหาย่อตาม scale จัดกลางแนวนอน, ชิดบนแนวตั้ง
+  const dw=inner.width*scale, dh=inner.height*scale;
+  const dx=(FRAME_W-dw)/2, dy=Math.max(0,(FRAME_H-dh)/2*0.35);  // เยื้องบนเล็กน้อย
+  ox.drawImage(inner,0,0,inner.width,inner.height,dx,dy,dw,dh);
+  return out;
+}
+
 /* ═══════════ Export Preview Flow: ดูบิลทีละห้องก่อนบันทึก ═══════════ */
 let _epv = { mode:'img', list:[], idx:0, skipped:[], curBlob:null, curFname:null, warned:false, jspdfReady:false };
 
@@ -1530,6 +1572,7 @@ async function epvRender(){
   const room=_epv.list[_epv.idx];
   const rm=rooms.find(r=>r.room===room);
   el('epvProgress').textContent=`(${_epv.idx+1}/${_epv.list.length}) · ห้อง ${room}`;
+  el('epvScaleLabel').textContent=Math.round(getBillScale()*100)+'%';
   el('epvSaveBtn').disabled=true; el('epvSkipBtn').disabled=true;
   if(!rm){ return epvAdvance(); }   // ห้องหาย ข้ามอัตโนมัติ
 
@@ -1550,6 +1593,16 @@ async function epvRender(){
     _epv.curBlob=await new Promise(res=>cv.toBlob(res,'image/png'));
   }
   el('epvSaveBtn').disabled=false; el('epvSkipBtn').disabled=false;
+}
+
+/* ปรับขนาดเนื้อหา −/+ แล้ววาด preview + ไฟล์ใหม่ (จำค่าใน localStorage) */
+async function epvZoom(delta){
+  setBillScale(getBillScale()+delta);
+  await epvRender();
+}
+async function epvZoomReset(){
+  setBillScale(1);
+  await epvRender();
 }
 
 /* กด "บันทึกภาพ" — บันทึกไฟล์ปัจจุบัน แล้วไปรูปถัดไปทันที */
